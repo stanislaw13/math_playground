@@ -7,63 +7,57 @@ import { useAuth } from "@/lib/auth/context";
 import { getPointsForAttempt, getMaxPerQuestion } from "@/lib/scoring";
 import { saveGameScore } from "@/lib/progress";
 
+type ShapeKind = "square" | "rectangle" | "triangle" | "diamond" | "trapezoid";
+
+interface ShapeDims {
+  kind: ShapeKind;
+  a?: number;
+  b?: number;
+  h?: number;
+  d1?: number;
+  d2?: number;
+}
+
 interface Card {
   id: string;
   pairId: string;
   type: "shape" | "area";
-  display: string;
+  shapeDims?: ShapeDims;
+  display?: string;
   matched: boolean;
 }
 
-function generateCards(t: (key: string) => string, aS: string): Card[] {
-  const pairs: { shape: string; dims: string; area: number }[] = [];
+function generateCards(aS: string): Card[] {
+  const pairs: { shapeDims: ShapeDims; area: number }[] = [];
 
-  // Square
   const sq = Math.floor(Math.random() * 8) + 2;
-  pairs.push({ shape: t("areas.square"), dims: `a = ${sq}`, area: sq * sq });
+  pairs.push({ shapeDims: { kind: "square", a: sq }, area: sq * sq });
 
-  // Rectangle
   const rw = Math.floor(Math.random() * 7) + 2;
   const rh = Math.floor(Math.random() * 7) + 2;
-  pairs.push({ shape: t("areas.rectangle"), dims: `a = ${rw}, b = ${rh}`, area: rw * rh });
+  pairs.push({ shapeDims: { kind: "rectangle", a: rw, b: rh }, area: rw * rh });
 
-  // Triangle
   const tb = Math.floor(Math.random() * 8) + 2;
   const th = Math.floor(Math.random() * 8) + 2;
-  pairs.push({ shape: t("areas.triangle"), dims: `a = ${tb}, h = ${th}`, area: (tb * th) / 2 });
+  pairs.push({ shapeDims: { kind: "triangle", a: tb, h: th }, area: (tb * th) / 2 });
 
-  // Diamond
   const dd1 = Math.floor(Math.random() * 8) + 2;
   const dd2 = Math.floor(Math.random() * 8) + 2;
-  pairs.push({ shape: t("areas.diamond"), dims: `d₁ = ${dd1}, d₂ = ${dd2}`, area: (dd1 * dd2) / 2 });
+  pairs.push({ shapeDims: { kind: "diamond", d1: dd1, d2: dd2 }, area: (dd1 * dd2) / 2 });
 
-  // Trapezoid
   const ta = Math.floor(Math.random() * 5) + 3;
   const tbs = Math.floor(Math.random() * 4) + 1;
   const tth = Math.floor(Math.random() * 5) + 2;
-  pairs.push({ shape: t("areas.trapezoid"), dims: `a = ${ta}, b = ${tbs}, h = ${tth}`, area: ((ta + tbs) * tth) / 2 });
+  pairs.push({ shapeDims: { kind: "trapezoid", a: ta, b: tbs, h: tth }, area: ((ta + tbs) * tth) / 2 });
 
-  // Another square with different value
   const sq2 = Math.floor(Math.random() * 6) + 3;
-  pairs.push({ shape: t("areas.square"), dims: `a = ${sq2}`, area: sq2 * sq2 });
+  pairs.push({ shapeDims: { kind: "square", a: sq2 }, area: sq2 * sq2 });
 
   const cards: Card[] = [];
   pairs.forEach((pair, i) => {
     const pairId = `pair-${i}`;
-    cards.push({
-      id: `shape-${i}`,
-      pairId,
-      type: "shape",
-      display: `${pair.shape}\n${pair.dims}`,
-      matched: false,
-    });
-    cards.push({
-      id: `area-${i}`,
-      pairId,
-      type: "area",
-      display: `${aS} = ${pair.area}`,
-      matched: false,
-    });
+    cards.push({ id: `shape-${i}`, pairId, type: "shape", shapeDims: pair.shapeDims, matched: false });
+    cards.push({ id: `area-${i}`, pairId, type: "area", display: `${aS} = ${pair.area}`, matched: false });
   });
 
   // Shuffle
@@ -73,6 +67,66 @@ function generateCards(t: (key: string) => string, aS: string): Card[] {
   }
 
   return cards;
+}
+
+function ShapeCardGraphic({ dims }: { dims: ShapeDims }) {
+  const colors: Record<ShapeKind, string> = {
+    square: "#6366f1",
+    rectangle: "#6366f1",
+    triangle: "#22c55e",
+    diamond: "#f97316",
+    trapezoid: "#8b5cf6",
+  };
+  const stroke = colors[dims.kind];
+  const labelFill = "var(--color-text-secondary)";
+
+  switch (dims.kind) {
+    case "square":
+      return (
+        <svg viewBox="0 0 80 68" className="h-auto w-full max-w-[80px]">
+          <rect x="15" y="5" width="50" height="50" fill="none" stroke={stroke} strokeWidth="2" />
+          <text x="40" y="64" textAnchor="middle" fontSize="10" fill={labelFill}>a={dims.a}</text>
+          <text x="8" y="33" textAnchor="middle" fontSize="10" fill={labelFill}>a</text>
+        </svg>
+      );
+    case "rectangle":
+      return (
+        <svg viewBox="0 0 90 68" className="h-auto w-full max-w-[90px]">
+          <rect x="8" y="10" width="74" height="42" fill="none" stroke={stroke} strokeWidth="2" />
+          <text x="45" y="64" textAnchor="middle" fontSize="10" fill={labelFill}>a={dims.a}</text>
+          <text x="4" y="33" textAnchor="middle" fontSize="10" fill={labelFill}>b={dims.b}</text>
+        </svg>
+      );
+    case "triangle":
+      return (
+        <svg viewBox="0 0 90 78" className="h-auto w-full max-w-[90px]">
+          <polygon points="45,8 10,68 80,68" fill="none" stroke={stroke} strokeWidth="2" />
+          <line x1="45" y1="8" x2="45" y2="68" stroke="#a1a1aa" strokeWidth="1" strokeDasharray="4" />
+          <text x="45" y="76" textAnchor="middle" fontSize="10" fill={labelFill}>a={dims.a}</text>
+          <text x="52" y="42" textAnchor="start" fontSize="10" fill={labelFill}>h={dims.h}</text>
+        </svg>
+      );
+    case "diamond":
+      return (
+        <svg viewBox="0 0 80 88" className="h-auto w-full max-w-[80px]">
+          <polygon points="40,5 75,44 40,83 5,44" fill="none" stroke={stroke} strokeWidth="2" />
+          <line x1="5" y1="44" x2="75" y2="44" stroke="#a1a1aa" strokeWidth="1" strokeDasharray="4" />
+          <line x1="40" y1="5" x2="40" y2="83" stroke="#a1a1aa" strokeWidth="1" strokeDasharray="4" />
+          <text x="40" y="58" textAnchor="middle" fontSize="10" fill={labelFill}>d₁={dims.d1}</text>
+          <text x="53" y="27" textAnchor="start" fontSize="10" fill={labelFill}>d₂={dims.d2}</text>
+        </svg>
+      );
+    case "trapezoid":
+      return (
+        <svg viewBox="0 0 90 78" className="h-auto w-full max-w-[90px]">
+          <polygon points="8,65 82,65 64,12 26,12" fill="none" stroke={stroke} strokeWidth="2" />
+          <line x1="45" y1="12" x2="45" y2="65" stroke="#a1a1aa" strokeWidth="1" strokeDasharray="4" />
+          <text x="45" y="75" textAnchor="middle" fontSize="10" fill={labelFill}>a={dims.a}</text>
+          <text x="45" y="9" textAnchor="middle" fontSize="10" fill={labelFill}>b={dims.b}</text>
+          <text x="52" y="42" textAnchor="start" fontSize="10" fill={labelFill}>h={dims.h}</text>
+        </svg>
+      );
+  }
 }
 
 export default function MatchPairs() {
@@ -95,7 +149,7 @@ export default function MatchPairs() {
   const totalPairs = 6;
 
   const startGame = useCallback(() => {
-    setCards(generateCards(t, aS));
+    setCards(generateCards(aS));
     setSelected(null);
     setMoves(0);
     setMatchedCount(0);
@@ -217,7 +271,7 @@ export default function MatchPairs() {
               key={card.id}
               onClick={() => !isMatched && handleCardClick(card.id)}
               layout
-              className={`relative flex min-h-[80px] items-center justify-center rounded-lg border p-3 text-center text-xs font-medium transition-all sm:text-sm ${
+              className={`relative flex min-h-[100px] items-center justify-center rounded-lg border p-3 text-center text-xs font-medium transition-all sm:text-sm ${
                 isMatched
                   ? "border-[var(--color-success)] bg-[var(--color-success)]/10 text-[var(--color-success)] opacity-60"
                   : isWrong
@@ -230,7 +284,11 @@ export default function MatchPairs() {
               } ${isMatched ? "cursor-default" : "cursor-pointer"}`}
               whileTap={{ scale: 0.95 }}
             >
-              <span className="whitespace-pre-line">{card.display}</span>
+              {card.type === "shape" && card.shapeDims ? (
+                <ShapeCardGraphic dims={card.shapeDims} />
+              ) : (
+                <span>{card.display}</span>
+              )}
             </motion.button>
           );
         })}

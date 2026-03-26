@@ -7,9 +7,12 @@ import { useAuth } from "@/lib/auth/context";
 import { getPointsForAttempt, getMaxPerQuestion } from "@/lib/scoring";
 import { saveGameScore } from "@/lib/progress";
 import HintSystem, { type HintStep } from "@/components/lessons/HintSystem";
+import { SquareSVG, RectangleSVG, TriangleSVG, DiamondSVG, TrapezoidSVG } from "@/components/lessons/areas/ShapeSVGs";
+
+type DetectiveShapeType = "square" | "rectangle" | "triangle" | "diamond" | "trapezoid";
 
 interface DetectiveQuestion {
-  shapeName: string;
+  shapeType: DetectiveShapeType;
   givenText: string;
   askText: string;
   answer: number;
@@ -24,7 +27,7 @@ function generateQuestions(t: (key: string) => string, aS: string, pS: string): 
   const rh = Math.floor(Math.random() * 10) + 2;
   const rArea = rw * rh;
   questions.push({
-    shapeName: t("areas.rectangle"),
+    shapeType: "rectangle",
     givenText: `${aS} = ${rArea}, b = ${rh}`,
     askText: "a = ?",
     answer: rw,
@@ -40,7 +43,7 @@ function generateQuestions(t: (key: string) => string, aS: string, pS: string): 
   const rh2 = Math.floor(Math.random() * 8) + 2;
   const rPerim = 2 * (rw2 + rh2);
   questions.push({
-    shapeName: t("areas.rectangle"),
+    shapeType: "rectangle",
     givenText: `${pS} = ${rPerim}, a = ${rw2}`,
     askText: "b = ?",
     answer: rh2,
@@ -54,7 +57,7 @@ function generateQuestions(t: (key: string) => string, aS: string, pS: string): 
   // Square: given area, find side
   const sq = Math.floor(Math.random() * 10) + 2;
   questions.push({
-    shapeName: t("areas.square"),
+    shapeType: "square",
     givenText: `${aS} = ${sq * sq}`,
     askText: "a = ?",
     answer: sq,
@@ -68,7 +71,7 @@ function generateQuestions(t: (key: string) => string, aS: string, pS: string): 
   // Square: given perimeter, find side
   const sq2 = Math.floor(Math.random() * 10) + 2;
   questions.push({
-    shapeName: t("areas.square"),
+    shapeType: "square",
     givenText: `${pS} = ${sq2 * 4}`,
     askText: "a = ?",
     answer: sq2,
@@ -84,7 +87,7 @@ function generateQuestions(t: (key: string) => string, aS: string, pS: string): 
   const th = Math.floor(Math.random() * 10) + 2;
   const tArea = (tb * th) / 2;
   questions.push({
-    shapeName: t("areas.triangle"),
+    shapeType: "triangle",
     givenText: `${aS} = ${tArea}, a = ${tb}`,
     askText: "h = ?",
     answer: th,
@@ -100,7 +103,7 @@ function generateQuestions(t: (key: string) => string, aS: string, pS: string): 
   const dd2 = Math.floor(Math.random() * 10) + 2;
   const dArea = (dd1 * dd2) / 2;
   questions.push({
-    shapeName: t("areas.diamond"),
+    shapeType: "diamond",
     givenText: `${aS} = ${dArea}, d₁ = ${dd1}`,
     askText: "d₂ = ?",
     answer: dd2,
@@ -117,7 +120,7 @@ function generateQuestions(t: (key: string) => string, aS: string, pS: string): 
   const tth = Math.floor(Math.random() * 8) + 2;
   const trArea = ((ta + tbs) * tth) / 2;
   questions.push({
-    shapeName: t("areas.trapezoid"),
+    shapeType: "trapezoid",
     givenText: `${aS} = ${trArea}, a = ${ta}, h = ${tth}`,
     askText: "b = ?",
     answer: tbs,
@@ -135,6 +138,16 @@ function generateQuestions(t: (key: string) => string, aS: string, pS: string): 
   }
 
   return questions;
+}
+
+function DetectiveShapeGraphic({ shapeType }: { shapeType: DetectiveShapeType }) {
+  switch (shapeType) {
+    case "square": return <SquareSVG />;
+    case "rectangle": return <RectangleSVG />;
+    case "triangle": return <TriangleSVG />;
+    case "diamond": return <DiamondSVG />;
+    case "trapezoid": return <TrapezoidSVG />;
+  }
 }
 
 export default function Detective() {
@@ -248,7 +261,9 @@ export default function Detective() {
           exit={{ opacity: 0, x: -20 }}
         >
           <div className="mb-4 rounded-lg bg-[var(--color-bg-tertiary)] p-4">
-            <p className="mb-1 text-sm text-[var(--color-text-secondary)]">{q.shapeName}</p>
+            <div className="mb-3 flex justify-center">
+              <DetectiveShapeGraphic shapeType={q.shapeType} />
+            </div>
             <p className="text-lg">
               <span className="text-[var(--color-text-secondary)]">{tg("givenClue")}: </span>
               <span className="font-medium">{q.givenText}</span>

@@ -16,11 +16,6 @@ const ShapeExplorer = dynamic(
   { ssr: false }
 );
 
-const AreasQuiz = dynamic(
-  () => import("@/components/lessons/areas/AreasQuiz"),
-  { ssr: false }
-);
-
 const ShapeBuilder = dynamic(
   () => import("@/components/lessons/areas/ShapeBuilder"),
   { ssr: false }
@@ -71,7 +66,7 @@ export default function AreasPage() {
   ];
 
   return (
-    <div>
+    <div className="pb-[50vh]">
       <FormulaSidebar formulas={formulas} />
       <h1 className="mb-2 text-3xl font-bold">{t("title")}</h1>
 
@@ -80,11 +75,6 @@ export default function AreasPage() {
 
       {/* Games section */}
       <div className="mt-16 space-y-12">
-        <div>
-          <h2 className="mb-6 text-2xl font-bold">{t("quizTitle")}</h2>
-          <AreasQuiz />
-        </div>
-
         <div>
           <h2 className="mb-6 text-2xl font-bold">{tg("shapeBuilder")}</h2>
           <ShapeBuilder />

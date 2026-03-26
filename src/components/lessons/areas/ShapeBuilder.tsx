@@ -86,13 +86,7 @@ function generateChallenges(t: (key: string) => string, aS: string): Challenge[]
   return challenges;
 }
 
-function ShapePreview({
-  shape,
-  dims,
-}: {
-  shape: ShapeType;
-  dims: number[];
-}) {
+function ShapePreview({ shape, dims, topShift }: { shape: ShapeType; dims: number[]; topShift?: number }) {
   const maxDim = Math.max(...dims, 1);
   const pad = Math.max(maxDim * 0.25, 1.5);
 
@@ -107,8 +101,10 @@ function ShapePreview({
     }
     case "triangle": {
       const [b, h] = dims;
-      points = [[0, 0], [b, 0], [b / 2, h]];
-      extraLines = [{ p1: [b / 2, 0], p2: [b / 2, h] }];
+      const shift = topShift ?? 0;
+      const topX = b / 2 + shift;
+      points = [[0, 0], [b, 0], [topX, h]];
+      extraLines = [{ p1: [topX, 0], p2: [topX, h] }];
       break;
     }
     case "diamond": {
@@ -124,8 +120,11 @@ function ShapePreview({
     case "trapezoid": {
       const [a, b, h] = dims;
       const offset = (a - b) / 2;
-      points = [[0, 0], [a, 0], [a - Math.max(offset, 0), h], [Math.max(offset, 0), h]];
-      extraLines = [{ p1: [Math.max(offset, 0), 0], p2: [Math.max(offset, 0), h] }];
+      const shift = topShift ?? 0;
+      const leftX = offset + shift;
+      const rightX = leftX + b;
+      points = [[0, 0], [a, 0], [rightX, h], [leftX, h]];
+      extraLines = [{ p1: [leftX, 0], p2: [leftX, h] }];
       break;
     }
   }
@@ -211,6 +210,7 @@ export default function ShapeBuilder() {
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [dims, setDims] = useState<number[]>([]);
+  const [topShift, setTopShift] = useState(0);
   const [solved, setSolved] = useState(false);
   const [wrongAttempts, setWrongAttempts] = useState(0);
   const [score, setScore] = useState(0);
@@ -221,6 +221,7 @@ export default function ShapeBuilder() {
     setChallenges(ch);
     setCurrentIndex(0);
     setDims(getSliderConfig(ch[0].shape, t).map(() => 3));
+    setTopShift(0);
     setSolved(false);
     setWrongAttempts(0);
     setScore(0);
@@ -247,6 +248,7 @@ export default function ShapeBuilder() {
       const nextIdx = currentIndex + 1;
       setCurrentIndex(nextIdx);
       setDims(getSliderConfig(challenges[nextIdx].shape, t).map(() => 3));
+      setTopShift(0);
       setSolved(false);
       setWrongAttempts(0);
     } else {
@@ -287,8 +289,6 @@ export default function ShapeBuilder() {
   }
 
   const challenge = challenges[currentIndex];
-  const currentArea = calcArea(challenge.shape, dims);
-  const isMatch = Math.abs(currentArea - challenge.targetArea) < 0.01;
   const sliders = getSliderConfig(challenge.shape, t);
 
   return (
@@ -312,7 +312,7 @@ export default function ShapeBuilder() {
         <p className="text-xs text-[var(--color-text-secondary)]">{tg("findDimensions")}</p>
       </div>
 
-      <ShapePreview shape={challenge.shape} dims={dims} />
+      <ShapePreview shape={challenge.shape} dims={dims} topShift={topShift} />
 
       <div className="mt-4 space-y-3">
         {sliders.map((slider, i) => (
@@ -335,27 +335,31 @@ export default function ShapeBuilder() {
             <span className="w-12 text-right text-sm font-mono">{dims[i]}</span>
           </div>
         ))}
+        {(challenge.shape === "triangle" || challenge.shape === "trapezoid") && (
+          <div className="flex items-center gap-3">
+            <span className="w-28 text-sm text-[var(--color-text-secondary)]">{t("areas.topShift")}</span>
+            <input
+              type="range"
+              min={-7}
+              max={7}
+              step={0.5}
+              value={topShift}
+              onChange={(e) => setTopShift(parseFloat(e.target.value))}
+              className="flex-1"
+              disabled={solved}
+            />
+            <span className="w-12 text-right text-sm font-mono">{topShift}</span>
+          </div>
+        )}
       </div>
 
-      <div className="mt-4 flex items-center justify-between">
-        <div className="text-sm">
-          <span className="text-[var(--color-text-secondary)]">{tg("currentArea")}: </span>
-          <span className={`font-mono font-bold ${isMatch ? "text-[var(--color-success)]" : "text-[var(--color-text-primary)]"}`}>
-            {currentArea.toFixed(2)}
-          </span>
-        </div>
+      <div className="mt-4 flex justify-end">
         {!solved ? (
-          <button
-            onClick={checkMatch}
-            className="rounded-lg bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--color-accent-hover)]"
-          >
+          <button onClick={checkMatch} className="rounded-lg bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--color-accent-hover)]">
             {t("areas.checkAnswer")}
           </button>
         ) : (
-          <button
-            onClick={nextChallenge}
-            className="rounded-lg bg-[var(--color-success)] px-4 py-2 text-sm font-medium text-white"
-          >
+          <button onClick={nextChallenge} className="rounded-lg bg-[var(--color-success)] px-4 py-2 text-sm font-medium text-white">
             {tg("nextChallenge")}
           </button>
         )}

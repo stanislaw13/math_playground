@@ -13,6 +13,13 @@ import type {
   Profile,
 } from "@/lib/supabase/types";
 
+const gameNames: Record<string, string> = {
+  "areas-quiz": "Quiz",
+  "shape-builder": "Shape Builder",
+  "detective": "Detective",
+  "match-pairs": "Match Pairs",
+};
+
 export default function ProfilePage() {
   const t = useTranslations();
   const { user, profile, loading } = useAuth();
@@ -107,39 +114,6 @@ export default function ProfilePage() {
     );
   };
 
-  const markLessonComplete = async (lessonId: string) => {
-    if (!user) return;
-
-    await supabase.from("lesson_progress").upsert({
-      user_id: user.id,
-      lesson_id: lessonId,
-      completed: true,
-      completed_at: new Date().toISOString(),
-    });
-
-    setProgress((prev) => {
-      const existing = prev.find((p) => p.lesson_id === lessonId);
-      if (existing) {
-        return prev.map((p) =>
-          p.lesson_id === lessonId
-            ? { ...p, completed: true, completed_at: new Date().toISOString() }
-            : p
-        );
-      }
-      return [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          user_id: user.id,
-          lesson_id: lessonId,
-          completed: true,
-          completed_at: new Date().toISOString(),
-          created_at: new Date().toISOString(),
-        },
-      ];
-    });
-  };
-
   if (loading || !user) return null;
 
   const getBestAttempt = (lessonId: string, gameId: string) => {
@@ -155,6 +129,22 @@ export default function ProfilePage() {
     };
   };
 
+  const getLessonProgress = (lesson: typeof lessons[0]) => {
+    let totalPercent = 0;
+    let gamesPlayed = 0;
+    for (const gameId of lesson.games) {
+      const stats = getBestAttempt(lesson.id, gameId);
+      if (stats) {
+        gamesPlayed++;
+        totalPercent += stats.best.max_score > 0
+          ? (stats.best.score / stats.best.max_score) * 100
+          : 0;
+      }
+    }
+    if (gamesPlayed === 0) return 0;
+    return Math.round(totalPercent / lesson.games.length);
+  };
+
   return (
     <div className="max-w-3xl">
       <h1 className="mb-8 text-3xl font-bold">
@@ -166,7 +156,7 @@ export default function ProfilePage() {
         <h2 className="mb-4 text-xl font-semibold">{t("profile.progress")}</h2>
         <div className="space-y-3">
           {lessons.map((lesson) => {
-            const prog = progress.find((p) => p.lesson_id === lesson.id);
+            const progressPercent = getLessonProgress(lesson);
             return (
               <div
                 key={lesson.id}
@@ -176,24 +166,31 @@ export default function ProfilePage() {
                   <div>
                     <h3 className="font-medium">{t(lesson.titleKey)}</h3>
                     <p className="text-sm text-[var(--color-text-secondary)]">
-                      {prog?.completed ? (
-                        <span className="text-[var(--color-success)]">
-                          {t("common.completed")}
+                      {progressPercent > 0 ? (
+                        <span className={progressPercent >= 80 ? "text-[var(--color-success)]" : "text-[var(--color-accent)]"}>
+                          {progressPercent}%
                         </span>
                       ) : (
                         t("common.notCompleted")
                       )}
                     </p>
                   </div>
-                  {!prog?.completed && (
-                    <button
-                      onClick={() => markLessonComplete(lesson.id)}
-                      className="rounded-md bg-[var(--color-bg-tertiary)] px-3 py-1 text-sm text-[var(--color-text-secondary)] transition-colors hover:text-[var(--color-text-primary)]"
-                    >
-                      {t("common.markComplete")}
-                    </button>
-                  )}
                 </div>
+
+                {/* Progress bar */}
+                {progressPercent > 0 && (
+                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--color-bg-tertiary)]">
+                    <div
+                      className="h-full rounded-full transition-all"
+                      style={{
+                        width: `${progressPercent}%`,
+                        backgroundColor: progressPercent >= 80
+                          ? "var(--color-success)"
+                          : "var(--color-accent)",
+                      }}
+                    />
+                  </div>
+                )}
 
                 {/* Game stats */}
                 {lesson.games.map((gameId) => {
@@ -204,6 +201,9 @@ export default function ProfilePage() {
                       key={gameId}
                       className="mt-3 flex gap-6 border-t border-[var(--color-border)] pt-3 text-sm"
                     >
+                      <span className="font-medium text-[var(--color-text-secondary)]">
+                        {gameNames[gameId] || gameId}
+                      </span>
                       <span>
                         {t("common.bestScore")}:{" "}
                         <span className="font-mono text-[var(--color-accent)]">
@@ -213,12 +213,6 @@ export default function ProfilePage() {
                       <span>
                         {t("common.attempts")}:{" "}
                         <span className="font-mono">{stats.totalAttempts}</span>
-                      </span>
-                      <span>
-                        {t("common.accuracy")}:{" "}
-                        <span className="font-mono">
-                          {stats.best.accuracy.toFixed(0)}%
-                        </span>
                       </span>
                     </div>
                   );

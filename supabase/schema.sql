@@ -1,20 +1,22 @@
--- Profiles table (extends Supabase auth.users)
+-- ============================================
+-- PART 1: Create all tables (order matters for foreign keys)
+-- ============================================
+
 create table if not exists public.profiles (
   id uuid references auth.users on delete cascade primary key,
   username text unique not null,
   created_at timestamptz default now()
 );
 
--- Enable RLS
-alter table public.profiles enable row level security;
+create table if not exists public.teacher_links (
+  id uuid default gen_random_uuid() primary key,
+  student_id uuid references public.profiles(id) on delete cascade not null,
+  teacher_id uuid references public.profiles(id) on delete cascade not null,
+  status text check (status in ('pending', 'accepted', 'declined')) default 'pending',
+  created_at timestamptz default now(),
+  unique(student_id, teacher_id)
+);
 
-create policy "Public profiles are viewable by everyone"
-  on public.profiles for select using (true);
-
-create policy "Users can update own profile"
-  on public.profiles for update using (auth.uid() = id);
-
--- Lesson progress
 create table if not exists public.lesson_progress (
   id uuid default gen_random_uuid() primary key,
   user_id uuid references public.profiles(id) on delete cascade not null,
@@ -25,29 +27,6 @@ create table if not exists public.lesson_progress (
   unique(user_id, lesson_id)
 );
 
-alter table public.lesson_progress enable row level security;
-
-create policy "Users can view own progress"
-  on public.lesson_progress for select using (auth.uid() = user_id);
-
-create policy "Users can insert own progress"
-  on public.lesson_progress for insert with check (auth.uid() = user_id);
-
-create policy "Users can update own progress"
-  on public.lesson_progress for update using (auth.uid() = user_id);
-
--- Shared progress: teachers can view student progress
-create policy "Teachers can view shared student progress"
-  on public.lesson_progress for select using (
-    exists (
-      select 1 from public.teacher_links
-      where teacher_id = auth.uid()
-        and student_id = lesson_progress.user_id
-        and status = 'accepted'
-    )
-  );
-
--- Game attempts
 create table if not exists public.game_attempts (
   id uuid default gen_random_uuid() primary key,
   user_id uuid references public.profiles(id) on delete cascade not null,
@@ -59,15 +38,49 @@ create table if not exists public.game_attempts (
   attempted_at timestamptz default now()
 );
 
-alter table public.game_attempts enable row level security;
+-- ============================================
+-- PART 2: Enable RLS and create policies
+-- ============================================
 
+alter table public.profiles enable row level security;
+alter table public.lesson_progress enable row level security;
+alter table public.game_attempts enable row level security;
+alter table public.teacher_links enable row level security;
+
+-- Profiles policies
+create policy "Public profiles are viewable by everyone"
+  on public.profiles for select using (true);
+
+create policy "Users can update own profile"
+  on public.profiles for update using (auth.uid() = id);
+
+-- Lesson progress policies
+create policy "Users can view own progress"
+  on public.lesson_progress for select using (auth.uid() = user_id);
+
+create policy "Users can insert own progress"
+  on public.lesson_progress for insert with check (auth.uid() = user_id);
+
+create policy "Users can update own progress"
+  on public.lesson_progress for update using (auth.uid() = user_id);
+
+create policy "Teachers can view shared student progress"
+  on public.lesson_progress for select using (
+    exists (
+      select 1 from public.teacher_links
+      where teacher_id = auth.uid()
+        and student_id = lesson_progress.user_id
+        and status = 'accepted'
+    )
+  );
+
+-- Game attempts policies
 create policy "Users can view own attempts"
   on public.game_attempts for select using (auth.uid() = user_id);
 
 create policy "Users can insert own attempts"
   on public.game_attempts for insert with check (auth.uid() = user_id);
 
--- Teachers can view shared student attempts
 create policy "Teachers can view shared student attempts"
   on public.game_attempts for select using (
     exists (
@@ -78,18 +91,7 @@ create policy "Teachers can view shared student attempts"
     )
   );
 
--- Teacher-student links
-create table if not exists public.teacher_links (
-  id uuid default gen_random_uuid() primary key,
-  student_id uuid references public.profiles(id) on delete cascade not null,
-  teacher_id uuid references public.profiles(id) on delete cascade not null,
-  status text check (status in ('pending', 'accepted', 'declined')) default 'pending',
-  created_at timestamptz default now(),
-  unique(student_id, teacher_id)
-);
-
-alter table public.teacher_links enable row level security;
-
+-- Teacher links policies
 create policy "Users can view own links as student"
   on public.teacher_links for select using (auth.uid() = student_id);
 
@@ -105,7 +107,10 @@ create policy "Teachers can update link status"
 create policy "Students can delete own links"
   on public.teacher_links for delete using (auth.uid() = student_id);
 
--- Function to handle new user signup
+-- ============================================
+-- PART 3: Auto-create profile on signup
+-- ============================================
+
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin
@@ -115,7 +120,6 @@ begin
 end;
 $$ language plpgsql security definer;
 
--- Trigger to auto-create profile on signup
 drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users

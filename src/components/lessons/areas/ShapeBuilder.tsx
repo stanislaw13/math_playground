@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
-import { Mafs, Polygon, Coordinates, Text, Line, Theme } from "mafs";
+import { Mafs, Polygon, Coordinates, Line, Theme } from "mafs";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth/context";
-import { createClient } from "@/lib/supabase/client";
+import { getPointsForAttempt, getMaxPerQuestion } from "@/lib/scoring";
+import { saveGameScore } from "@/lib/progress";
 import HintSystem, { type HintStep } from "@/components/lessons/HintSystem";
 
 type ShapeType = "rectangle" | "triangle" | "diamond" | "trapezoid";
@@ -231,8 +232,11 @@ export default function ShapeBuilder() {
     const challenge = challenges[currentIndex];
     const currentArea = calcArea(challenge.shape, dims);
     if (Math.abs(currentArea - challenge.targetArea) < 0.01) {
+      const tryNumber = wrongAttempts + 1;
+      const maxPer = getMaxPerQuestion(challenges.length);
+      const points = getPointsForAttempt(tryNumber, maxPer);
+      setScore((s) => s + points);
       setSolved(true);
-      setScore((s) => s + 1);
     } else {
       setWrongAttempts((w) => w + 1);
     }
@@ -247,22 +251,10 @@ export default function ShapeBuilder() {
       setWrongAttempts(0);
     } else {
       setFinished(true);
-      saveAttempt();
+      if (user) {
+        saveGameScore(user.id, "primary-areas", "shape-builder", score, 1000);
+      }
     }
-  };
-
-  const saveAttempt = async () => {
-    if (!user) return;
-    const supabase = createClient();
-    if (!supabase) return;
-    await supabase.from("game_attempts").insert({
-      user_id: user.id,
-      lesson_id: "primary-areas",
-      game_id: "shape-builder",
-      score,
-      max_score: challenges.length,
-      accuracy: challenges.length > 0 ? (score / challenges.length) * 100 : 0,
-    });
   };
 
   if (!started) {
@@ -278,12 +270,15 @@ export default function ShapeBuilder() {
   }
 
   if (finished) {
-    const accuracy = challenges.length > 0 ? Math.round((score / challenges.length) * 100) : 0;
     return (
       <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-8 text-center">
         <h2 className="mb-4 text-2xl font-bold">{t("areas.quizComplete")}</h2>
-        <p className="mb-2 text-lg">{t("areas.quizScore", { score, total: challenges.length })}</p>
-        <p className="mb-6 text-[var(--color-text-secondary)]">{t("areas.quizAccuracy", { accuracy })}</p>
+        <p className="mb-2 text-3xl font-bold text-[var(--color-accent)]">
+          {score} / 1000
+        </p>
+        <p className="mb-6 text-[var(--color-text-secondary)]">
+          {t("areas.quizAccuracy", { accuracy: Math.round((score / 1000) * 100) })}
+        </p>
         <button onClick={startGame} className="rounded-lg bg-[var(--color-accent)] px-6 py-3 font-medium text-white transition-colors hover:bg-[var(--color-accent-hover)]">
           {t("areas.tryAgain")}
         </button>
@@ -303,6 +298,9 @@ export default function ShapeBuilder() {
           <h3 className="text-lg font-semibold">{tg("shapeBuilder")}</h3>
           <p className="text-sm text-[var(--color-text-secondary)]">
             {tg("challenge", { current: currentIndex + 1, total: challenges.length })}
+          </p>
+          <p className="text-xs font-mono text-[var(--color-accent)]">
+            {score} pts
           </p>
         </div>
         <HintSystem steps={challenge.hints} wrongAttempts={wrongAttempts} />

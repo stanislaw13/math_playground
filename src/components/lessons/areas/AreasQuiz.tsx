@@ -4,7 +4,8 @@ import { useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth/context";
-import { createClient } from "@/lib/supabase/client";
+import { getPointsForAttempt, getMaxPerQuestion } from "@/lib/scoring";
+import { saveGameScore } from "@/lib/progress";
 import HintSystem, { type HintStep } from "@/components/lessons/HintSystem";
 
 interface Question {
@@ -147,15 +148,13 @@ export default function AreasQuiz() {
   const [userAnswer, setUserAnswer] = useState("");
   const [feedback, setFeedback] = useState<"correct" | "incorrect" | null>(null);
   const [wrongAttempts, setWrongAttempts] = useState(0);
-  const [correctCount, setCorrectCount] = useState(0);
-  const [totalAttempts, setTotalAttempts] = useState(0);
+  const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
 
   const startQuiz = useCallback(() => {
     setQuestions(generateQuestions(t));
     setCurrentIndex(0);
-    setCorrectCount(0);
-    setTotalAttempts(0);
+    setScore(0);
     setWrongAttempts(0);
     setFinished(false);
     setStarted(true);
@@ -167,11 +166,13 @@ export default function AreasQuiz() {
     const parsed = parseFloat(userAnswer);
     if (isNaN(parsed)) return;
 
-    setTotalAttempts((a) => a + 1);
     const isCorrect = Math.abs(parsed - questions[currentIndex].answer) < 0.01;
 
     if (isCorrect) {
-      setCorrectCount((c) => c + 1);
+      const tryNumber = wrongAttempts + 1;
+      const maxPer = getMaxPerQuestion(questions.length);
+      const points = getPointsForAttempt(tryNumber, maxPer);
+      setScore((s) => s + points);
       setFeedback("correct");
     } else {
       setWrongAttempts((w) => w + 1);
@@ -187,25 +188,10 @@ export default function AreasQuiz() {
       setCurrentIndex((i) => i + 1);
     } else {
       setFinished(true);
-      saveAttempt();
+      if (user) {
+        saveGameScore(user.id, "primary-areas", "areas-quiz", score, 1000);
+      }
     }
-  };
-
-  const saveAttempt = async () => {
-    if (!user) return;
-    const supabase = createClient();
-    if (!supabase) return;
-    const accuracy =
-      questions.length > 0 ? (correctCount / questions.length) * 100 : 0;
-
-    await supabase.from("game_attempts").insert({
-      user_id: user.id,
-      lesson_id: "primary-areas",
-      game_id: "areas-quiz",
-      score: correctCount,
-      max_score: questions.length,
-      accuracy,
-    });
   };
 
   if (!started) {
@@ -224,10 +210,6 @@ export default function AreasQuiz() {
   }
 
   if (finished) {
-    const accuracy =
-      questions.length > 0
-        ? Math.round((correctCount / questions.length) * 100)
-        : 0;
     return (
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
@@ -235,14 +217,11 @@ export default function AreasQuiz() {
         className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-8 text-center"
       >
         <h2 className="mb-4 text-2xl font-bold">{t("quizComplete")}</h2>
-        <p className="mb-2 text-lg">
-          {t("quizScore", { score: correctCount, total: questions.length })}
+        <p className="mb-2 text-3xl font-bold text-[var(--color-accent)]">
+          {score} / 1000
         </p>
-        <p className="mb-2 text-[var(--color-text-secondary)]">
-          {t("quizAccuracy", { accuracy })}
-        </p>
-        <p className="mb-6 text-sm text-[var(--color-text-secondary)]">
-          {t("attempts")}: {totalAttempts}
+        <p className="mb-6 text-[var(--color-text-secondary)]">
+          {t("quizAccuracy", { accuracy: Math.round((score / 1000) * 100) })}
         </p>
         <button
           onClick={startQuiz}
@@ -259,12 +238,17 @@ export default function AreasQuiz() {
   return (
     <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6">
       <div className="mb-4 flex items-center justify-between">
-        <p className="text-sm text-[var(--color-text-secondary)]">
-          {t("questionOf", {
-            current: currentIndex + 1,
-            total: questions.length,
-          })}
-        </p>
+        <div>
+          <p className="text-sm text-[var(--color-text-secondary)]">
+            {t("questionOf", {
+              current: currentIndex + 1,
+              total: questions.length,
+            })}
+          </p>
+          <p className="text-xs font-mono text-[var(--color-accent)]">
+            {score} pts
+          </p>
+        </div>
         <HintSystem steps={q.hints} wrongAttempts={wrongAttempts} />
       </div>
 

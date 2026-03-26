@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth/context";
-import { createClient } from "@/lib/supabase/client";
+import { getPointsForAttempt, getMaxPerQuestion } from "@/lib/scoring";
+import { saveGameScore } from "@/lib/progress";
 
 interface Card {
   id: string;
@@ -87,6 +88,10 @@ export default function MatchPairs() {
   const [matchedCount, setMatchedCount] = useState(0);
   const [wrongFlash, setWrongFlash] = useState<string | null>(null);
   const [finished, setFinished] = useState(false);
+  const [score, setScore] = useState(0);
+  const scoreRef = useRef(0);
+  // Track wrong attempts per pair for scoring
+  const wrongPerPair = useRef<Record<string, number>>({});
   const totalPairs = 6;
 
   const startGame = useCallback(() => {
@@ -96,13 +101,18 @@ export default function MatchPairs() {
     setMatchedCount(0);
     setWrongFlash(null);
     setFinished(false);
+    setScore(0);
+    scoreRef.current = 0;
+    wrongPerPair.current = {};
     setStarted(true);
   }, [t, aS]);
 
   useEffect(() => {
     if (started && matchedCount === totalPairs) {
       setFinished(true);
-      saveAttempt();
+      if (user) {
+        saveGameScore(user.id, "primary-areas", "match-pairs", scoreRef.current, 1000);
+      }
     }
   }, [matchedCount, started]);
 
@@ -124,7 +134,14 @@ export default function MatchPairs() {
     setMoves((m) => m + 1);
 
     if (firstCard.pairId === card.pairId && firstCard.type !== card.type) {
-      // Match!
+      // Match! Calculate points based on wrong attempts for this pair
+      const pairWrongs = wrongPerPair.current[card.pairId] || 0;
+      const tryNumber = pairWrongs + 1;
+      const maxPer = getMaxPerQuestion(totalPairs);
+      const points = getPointsForAttempt(tryNumber, maxPer);
+      scoreRef.current += points;
+      setScore(scoreRef.current);
+
       setCards((prev) =>
         prev.map((c) =>
           c.pairId === card.pairId ? { ...c, matched: true } : c
@@ -133,30 +150,16 @@ export default function MatchPairs() {
       setMatchedCount((m) => m + 1);
       setSelected(null);
     } else {
-      // Wrong
+      // Wrong - track per pair for both cards involved
+      wrongPerPair.current[firstCard.pairId] = (wrongPerPair.current[firstCard.pairId] || 0) + 1;
+      wrongPerPair.current[card.pairId] = (wrongPerPair.current[card.pairId] || 0) + 1;
+
       setWrongFlash(cardId);
       setTimeout(() => {
         setSelected(null);
         setWrongFlash(null);
       }, 600);
     }
-  };
-
-  const saveAttempt = async () => {
-    if (!user) return;
-    const supabase = createClient();
-    if (!supabase) return;
-    // Score based on efficiency: fewer moves = higher score
-    const perfectMoves = totalPairs;
-    const score = Math.max(0, Math.round((perfectMoves / Math.max(moves, 1)) * 100));
-    await supabase.from("game_attempts").insert({
-      user_id: user.id,
-      lesson_id: "primary-areas",
-      game_id: "match-pairs",
-      score,
-      max_score: 100,
-      accuracy: score,
-    });
   };
 
   if (!started) {
@@ -175,9 +178,12 @@ export default function MatchPairs() {
     return (
       <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-8 text-center">
         <h2 className="mb-4 text-2xl font-bold">{tg("allMatched")}</h2>
+        <p className="mb-2 text-3xl font-bold text-[var(--color-accent)]">
+          {score} / 1000
+        </p>
         <p className="mb-2 text-lg">{tg("moves")}: {moves}</p>
         <p className="mb-6 text-[var(--color-text-secondary)]">
-          {totalPairs} {tg("pairsLeft").replace("left", "").replace("pozostało", "matched")}
+          {t("areas.quizAccuracy", { accuracy: Math.round((score / 1000) * 100) })}
         </p>
         <button onClick={startGame} className="rounded-lg bg-[var(--color-accent)] px-6 py-3 font-medium text-white transition-colors hover:bg-[var(--color-accent-hover)]">
           {t("areas.tryAgain")}
@@ -193,6 +199,9 @@ export default function MatchPairs() {
           <h3 className="text-lg font-semibold">{tg("matchPairs")}</h3>
           <p className="text-sm text-[var(--color-text-secondary)]">
             {matchedCount}/{totalPairs} {tg("matched")} · {tg("moves")}: {moves}
+          </p>
+          <p className="text-xs font-mono text-[var(--color-accent)]">
+            {score} pts
           </p>
         </div>
       </div>

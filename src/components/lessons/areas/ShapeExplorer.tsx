@@ -189,38 +189,43 @@ function TriangleExplorer() {
   const t = useTranslations("areas");
   const [base, setBase] = useState(4);
   const [height, setHeight] = useState(3);
+  const [topShift, setTopShift] = useState(0);
   const area = (base * height) / 2;
-  const hyp = Math.sqrt((base / 2) ** 2 + height ** 2);
-  const perimeter = base + 2 * hyp;
+  const topX = base / 2 + topShift;
+  const leftSide = Math.sqrt(topX ** 2 + height ** 2);
+  const rightSide = Math.sqrt((base - topX) ** 2 + height ** 2);
+  const perimeter = base + leftSide + rightSide;
   const maxDim = Math.max(base, height);
   const pad = Math.max(maxDim * 0.2, 1.5);
+  const viewLeft = Math.min(0, topX) - pad;
+  const viewRight = Math.max(base, topX) + pad;
   const aS = t("areaSymbol");
   const pS = t("perimeterSymbol");
 
   return (
     <ShapeCard title={t("triangle")} area={area} perimeter={perimeter}>
       <div className="mb-4 flex justify-center overflow-hidden rounded-lg bg-[var(--color-bg-primary)]">
-        <Mafs viewBox={{ x: [-pad, base + pad], y: [-pad, height + pad] }} height={280}>
+        <Mafs viewBox={{ x: [viewLeft, viewRight], y: [-pad, height + pad] }} height={280}>
           <Coordinates.Cartesian />
           <Polygon
             points={[
               [0, 0],
               [base, 0],
-              [base / 2, height],
+              [topX, height],
             ]}
             color={Theme.green}
           />
           {/* Dashed height line */}
           <Line.Segment
-            point1={[base / 2, 0]}
-            point2={[base / 2, height]}
+            point1={[topX, 0]}
+            point2={[topX, height]}
             color="#a1a1aa"
             style="dashed"
           />
           <Text x={base / 2} y={-pad * 0.5} size={14}>
             {`a = ${base}`}
           </Text>
-          <Text x={base / 2 + pad * 0.6} y={height / 2} size={14}>
+          <Text x={topX + pad * 0.6} y={height / 2} size={14}>
             {`h = ${height}`}
           </Text>
         </Mafs>
@@ -239,6 +244,13 @@ function TriangleExplorer() {
           onChange={setHeight}
           min={1}
           max={15}
+        />
+        <Slider
+          label={t("topShift")}
+          value={topShift}
+          onChange={setTopShift}
+          min={-7}
+          max={7}
         />
       </div>
       <p className="mt-3 text-sm text-[var(--color-text-secondary)]">
@@ -328,42 +340,48 @@ function TrapezoidExplorer() {
   const [a, setA] = useState(4);
   const [b, setB] = useState(2.5);
   const [h, setH] = useState(3);
+  const [topShift, setTopShift] = useState(0);
   const area = ((a + b) * h) / 2;
-  const offset = (a - b) / 2;
-  const legLength = Math.sqrt(offset ** 2 + h ** 2);
-  const perimeter = a + b + 2 * legLength;
+  const defaultOffset = (a - b) / 2;
+  const leftX = defaultOffset + topShift;
+  const rightX = leftX + b;
+  const leftLeg = Math.sqrt(leftX ** 2 + h ** 2);
+  const rightLeg = Math.sqrt((a - rightX) ** 2 + h ** 2);
+  const perimeter = a + b + leftLeg + rightLeg;
   const maxDim = Math.max(a, h);
   const pad = Math.max(maxDim * 0.2, 1.5);
+  const viewLeft = Math.min(0, leftX) - pad;
+  const viewRight = Math.max(a, rightX) + pad;
   const aS = t("areaSymbol");
 
   return (
     <ShapeCard title={t("trapezoid")} area={area} perimeter={perimeter}>
       <div className="mb-4 flex justify-center overflow-hidden rounded-lg bg-[var(--color-bg-primary)]">
-        <Mafs viewBox={{ x: [-pad, a + pad], y: [-pad, h + pad] }} height={280}>
+        <Mafs viewBox={{ x: [viewLeft, viewRight], y: [-pad, h + pad] }} height={280}>
           <Coordinates.Cartesian />
           <Polygon
             points={[
               [0, 0],
               [a, 0],
-              [a - offset, h],
-              [offset, h],
+              [rightX, h],
+              [leftX, h],
             ]}
             color={Theme.violet}
           />
           {/* Dashed height line */}
           <Line.Segment
-            point1={[offset, 0]}
-            point2={[offset, h]}
+            point1={[leftX, 0]}
+            point2={[leftX, h]}
             color="#a1a1aa"
             style="dashed"
           />
           <Text x={a / 2} y={-pad * 0.5} size={14}>
             {`a = ${a}`}
           </Text>
-          <Text x={(offset + a - offset) / 2} y={h + pad * 0.45} size={14}>
+          <Text x={(leftX + rightX) / 2} y={h + pad * 0.45} size={14}>
             {`b = ${b}`}
           </Text>
-          <Text x={offset + pad * 0.5} y={h / 2} size={14}>
+          <Text x={leftX + pad * 0.5} y={h / 2} size={14}>
             {`h = ${h}`}
           </Text>
         </Mafs>
@@ -391,6 +409,13 @@ function TrapezoidExplorer() {
           min={1}
           max={15}
         />
+        <Slider
+          label={t("topShift")}
+          value={topShift}
+          onChange={setTopShift}
+          min={-7}
+          max={7}
+        />
       </div>
       <p className="mt-3 text-sm text-[var(--color-text-secondary)]">
         {t("formula")}: <Latex tex={`${aS} = \\frac{(a + b) \\cdot h}{2}`} />
@@ -411,7 +436,9 @@ export default function ShapeExplorer() {
         <RectangleExplorer />
         <TriangleExplorer />
         <DiamondExplorer />
-        <TrapezoidExplorer />
+        <div className="md:col-span-2">
+          <TrapezoidExplorer />
+        </div>
       </div>
     </div>
   );

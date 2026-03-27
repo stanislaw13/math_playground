@@ -114,7 +114,9 @@
     "wrongMatch": "Not a match, try again",
     "allMatched": "All pairs matched!",
     "moves": "Moves",
-    "startGame": "Start Game"
+    "startGame": "Start Game",
+    "matchPairsUnits": "Unit Conversion Match",
+    "matchPairsUnitsDesc": "Match equivalent areas in different units — watch out, the numbers look similar!"
   },
   "auth": {
     "loginTitle": "Log in to Math Playground",

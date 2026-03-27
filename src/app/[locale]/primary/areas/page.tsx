@@ -31,6 +31,11 @@ const MatchPairs = dynamic(
   { ssr: false }
 );
 
+const MatchPairsUnits = dynamic(
+  () => import("@/components/lessons/areas/MatchPairsUnits"),
+  { ssr: false }
+);
+
 export default function AreasPage() {
   const t = useTranslations("areas");
   const tg = useTranslations("games");
@@ -88,6 +93,11 @@ export default function AreasPage() {
         <div>
           <h2 className="mb-6 text-2xl font-bold">{tg("matchPairs")}</h2>
           <MatchPairs />
+        </div>
+
+        <div>
+          <h2 className="mb-6 text-2xl font-bold">{tg("matchPairsUnits")}</h2>
+          <MatchPairsUnits />
         </div>
       </div>
     </div>

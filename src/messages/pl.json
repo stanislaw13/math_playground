@@ -114,7 +114,9 @@
     "wrongMatch": "Nie pasuje, spróbuj ponownie",
     "allMatched": "Wszystkie pary dopasowane!",
     "moves": "Ruchy",
-    "startGame": "Rozpocznij Grę"
+    "startGame": "Rozpocznij Grę",
+    "matchPairsUnits": "Dopasuj Jednostki Pola",
+    "matchPairsUnitsDesc": "Dopasuj równoważne pola w różnych jednostkach — uważaj, liczby wyglądają podobnie!"
   },
   "auth": {
     "loginTitle": "Zaloguj się do Placu Zabaw",

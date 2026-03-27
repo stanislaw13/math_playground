@@ -29,29 +29,70 @@ interface Card {
 
 function generateCards(aS: string): Card[] {
   const pairs: { shapeDims: ShapeDims; area: number }[] = [];
+  const usedAreas = new Set<number>();
 
-  const sq = Math.floor(Math.random() * 8) + 2;
-  pairs.push({ shapeDims: { kind: "square", a: sq }, area: sq * sq });
+  function addPair(gen: () => { shapeDims: ShapeDims; area: number }) {
+    for (let attempt = 0; attempt < 100; attempt++) {
+      const result = gen();
+      if (!usedAreas.has(result.area)) {
+        usedAreas.add(result.area);
+        pairs.push(result);
+        return;
+      }
+    }
+    // Fallback: accept duplicate after 100 tries
+    const result = gen();
+    usedAreas.add(result.area);
+    pairs.push(result);
+  }
 
-  const rw = Math.floor(Math.random() * 7) + 2;
-  const rh = Math.floor(Math.random() * 7) + 2;
-  pairs.push({ shapeDims: { kind: "rectangle", a: rw, b: rh }, area: rw * rh });
+  addPair(() => {
+    const a = Math.floor(Math.random() * 8) + 2;
+    return { shapeDims: { kind: "square", a }, area: a * a };
+  });
 
-  const tb = Math.floor(Math.random() * 8) + 2;
-  const th = Math.floor(Math.random() * 8) + 2;
-  pairs.push({ shapeDims: { kind: "triangle", a: tb, h: th }, area: (tb * th) / 2 });
+  addPair(() => {
+    const a = Math.floor(Math.random() * 7) + 2;
+    const b = Math.floor(Math.random() * 7) + 2;
+    return { shapeDims: { kind: "rectangle", a, b }, area: a * b };
+  });
 
-  const dd1 = Math.floor(Math.random() * 8) + 2;
-  const dd2 = Math.floor(Math.random() * 8) + 2;
-  pairs.push({ shapeDims: { kind: "diamond", d1: dd1, d2: dd2 }, area: (dd1 * dd2) / 2 });
+  addPair(() => {
+    const a = Math.floor(Math.random() * 8) + 2;
+    const h = Math.floor(Math.random() * 8) + 2;
+    return { shapeDims: { kind: "triangle", a, h }, area: (a * h) / 2 };
+  });
 
-  const ta = Math.floor(Math.random() * 5) + 3;
-  const tbs = Math.floor(Math.random() * 4) + 1;
-  const tth = Math.floor(Math.random() * 5) + 2;
-  pairs.push({ shapeDims: { kind: "trapezoid", a: ta, b: tbs, h: tth }, area: ((ta + tbs) * tth) / 2 });
+  addPair(() => {
+    const d1 = Math.floor(Math.random() * 8) + 2;
+    const d2 = Math.floor(Math.random() * 8) + 2;
+    return { shapeDims: { kind: "diamond", d1, d2 }, area: (d1 * d2) / 2 };
+  });
 
-  const sq2 = Math.floor(Math.random() * 6) + 3;
-  pairs.push({ shapeDims: { kind: "square", a: sq2 }, area: sq2 * sq2 });
+  addPair(() => {
+    const a = Math.floor(Math.random() * 5) + 3;
+    const b = Math.floor(Math.random() * 4) + 1;
+    const h = Math.floor(Math.random() * 5) + 2;
+    return { shapeDims: { kind: "trapezoid", a, b, h }, area: ((a + b) * h) / 2 };
+  });
+
+  addPair(() => {
+    const a = Math.floor(Math.random() * 6) + 3;
+    return { shapeDims: { kind: "square", a }, area: a * a };
+  });
+
+  addPair(() => {
+    const a = Math.floor(Math.random() * 8) + 2;
+    const b = Math.floor(Math.random() * 6) + 2;
+    return { shapeDims: { kind: "rectangle", a, b }, area: a * b };
+  });
+
+  addPair(() => {
+    const a = Math.floor(Math.random() * 6) + 3;
+    const b = Math.floor(Math.random() * 3) + 1;
+    const h = Math.floor(Math.random() * 6) + 2;
+    return { shapeDims: { kind: "trapezoid", a, b, h }, area: ((a + b) * h) / 2 };
+  });
 
   const cards: Card[] = [];
   pairs.forEach((pair, i) => {
@@ -146,7 +187,7 @@ export default function MatchPairs() {
   const scoreRef = useRef(0);
   // Track wrong attempts per pair for scoring
   const wrongPerPair = useRef<Record<string, number>>({});
-  const totalPairs = 6;
+  const totalPairs = 8;
 
   const startGame = useCallback(() => {
     setCards(generateCards(aS));
@@ -185,6 +226,13 @@ export default function MatchPairs() {
     }
 
     const firstCard = cards.find((c) => c.id === selected)!;
+
+    // Same type (shape+shape or area+area) — just switch selection, no penalty
+    if (firstCard.type === card.type) {
+      setSelected(cardId);
+      return;
+    }
+
     setMoves((m) => m + 1);
 
     if (firstCard.pairId === card.pairId && firstCard.type !== card.type) {
@@ -260,7 +308,7 @@ export default function MatchPairs() {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-4 gap-3">
         {cards.map((card) => {
           const isSelected = selected === card.id;
           const isWrong = wrongFlash === card.id || (wrongFlash && selected === card.id);

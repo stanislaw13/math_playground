@@ -116,7 +116,9 @@
     "moves": "Ruchy",
     "startGame": "Rozpocznij Grę",
     "matchPairsUnits": "Dopasuj Jednostki Pola",
-    "matchPairsUnitsDesc": "Dopasuj równoważne pola w różnych jednostkach — uważaj, liczby wyglądają podobnie!"
+    "matchPairsUnitsDesc": "Dopasuj równoważne pola w różnych jednostkach — uważaj, liczby wyglądają podobnie!",
+    "tryAgain": "Spróbuj ponownie",
+    "complete": "Ukończono!"
   },
   "auth": {
     "loginTitle": "Zaloguj się do Placu Zabaw",

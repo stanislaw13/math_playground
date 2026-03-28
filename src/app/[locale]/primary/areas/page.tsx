@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
-import FormulaSidebar from "@/components/ui/FormulaSidebar";
+import LessonShell from "@/components/lessons/LessonShell";
 import {
   SquareSVG,
   RectangleSVG,
@@ -10,30 +10,30 @@ import {
   DiamondSVG,
   TrapezoidSVG,
 } from "@/components/lessons/areas/ShapeSVGs";
-
-const ShapeExplorer = dynamic(
-  () => import("@/components/lessons/areas/ShapeExplorer"),
-  { ssr: false }
-);
+import {
+  SquareExplorer,
+  RectangleExplorer,
+  TriangleExplorer,
+  DiamondExplorer,
+  TrapezoidExplorer,
+} from "@/components/lessons/areas/ShapeExplorer";
+import {
+  generateShapeAreaPairs,
+  generateUnitConversionPairs,
+} from "@/components/lessons/areas/areaMatchPairs";
+import type { LessonConfig } from "@/components/lessons/types";
 
 const ShapeBuilder = dynamic(
   () => import("@/components/lessons/areas/ShapeBuilder"),
-  { ssr: false }
+  { ssr: false },
 );
-
 const Detective = dynamic(
   () => import("@/components/lessons/areas/Detective"),
-  { ssr: false }
+  { ssr: false },
 );
-
-const MatchPairs = dynamic(
-  () => import("@/components/lessons/areas/MatchPairs"),
-  { ssr: false }
-);
-
-const MatchPairsUnits = dynamic(
-  () => import("@/components/lessons/areas/MatchPairsUnits"),
-  { ssr: false }
+const MatchPairsGame = dynamic(
+  () => import("@/components/lessons/games/MatchPairsGame"),
+  { ssr: false },
 );
 
 export default function AreasPage() {
@@ -42,64 +42,92 @@ export default function AreasPage() {
   const aS = t("areaSymbol");
   const pS = t("perimeterSymbol");
 
-  const formulas = [
-    {
-      label: t("square"),
-      latex: `${aS} = a^2 \\quad ${pS} = 4a`,
-      svg: <SquareSVG />,
-    },
-    {
-      label: t("rectangle"),
-      latex: `${aS} = a \\cdot b \\quad ${pS} = 2(a+b)`,
-      svg: <RectangleSVG />,
-    },
-    {
-      label: t("triangle"),
-      latex: `${aS} = \\frac{a \\cdot h}{2}`,
-      svg: <TriangleSVG />,
-    },
-    {
-      label: t("diamond"),
-      latex: `${aS} = \\frac{d_1 \\cdot d_2}{2}`,
-      svg: <DiamondSVG />,
-    },
-    {
-      label: t("trapezoid"),
-      latex: `${aS} = \\frac{(a + b) \\cdot h}{2}`,
-      svg: <TrapezoidSVG />,
-    },
-  ];
+  const config: LessonConfig = {
+    id: "primary-areas",
+    sections: [], // We use children instead
+    formulas: [
+      { label: t("square"), latex: `${aS} = a^2 \\quad ${pS} = 4a`, svg: <SquareSVG /> },
+      { label: t("rectangle"), latex: `${aS} = a \\cdot b \\quad ${pS} = 2(a+b)`, svg: <RectangleSVG /> },
+      { label: t("triangle"), latex: `${aS} = \\frac{a \\cdot h}{2}`, svg: <TriangleSVG /> },
+      { label: t("diamond"), latex: `${aS} = \\frac{d_1 \\cdot d_2}{2}`, svg: <DiamondSVG /> },
+      { label: t("trapezoid"), latex: `${aS} = \\frac{(a + b) \\cdot h}{2}`, svg: <TrapezoidSVG /> },
+    ],
+  };
 
   return (
-    <div className="pb-[50vh]">
-      <FormulaSidebar formulas={formulas} />
-      <h1 className="mb-2 text-3xl font-bold">{t("title")}</h1>
+    <LessonShell config={config}>
+      {[
+        /* Section 1: Square + Rectangle */
+        <div key="s1">
+          <h2 className="mb-2 text-2xl font-bold">{t("title")}</h2>
+          <p className="mb-6 text-[var(--color-text-secondary)]">{t("intro")}</p>
+          <div className="grid gap-6 md:grid-cols-2">
+            <SquareExplorer />
+            <RectangleExplorer />
+          </div>
+        </div>,
 
-      {/* Interactive explorer */}
-      <ShapeExplorer />
+        /* Section 2: Triangle + Diamond */
+        <div key="s2">
+          <h2 className="mb-4 text-2xl font-bold">{t("interactive")}</h2>
+          <div className="grid gap-6 md:grid-cols-2">
+            <TriangleExplorer />
+            <DiamondExplorer />
+          </div>
+        </div>,
 
-      {/* Games section */}
-      <div className="mt-16 space-y-12">
-        <div>
-          <h2 className="mb-6 text-2xl font-bold">{tg("shapeBuilder")}</h2>
-          <ShapeBuilder />
-        </div>
+        /* Section 3: Trapezoid */
+        <div key="s3">
+          <h2 className="mb-4 text-2xl font-bold">{t("interactive")}</h2>
+          <div className="mx-auto max-w-2xl">
+            <TrapezoidExplorer />
+          </div>
+        </div>,
 
-        <div>
-          <h2 className="mb-6 text-2xl font-bold">{tg("detective")}</h2>
-          <Detective />
-        </div>
+        /* Section 4: Shape Builder game */
+        <div key="s4" className="flex items-start justify-center">
+          <div className="w-full max-w-3xl">
+            <h2 className="mb-6 text-2xl font-bold">{tg("shapeBuilder")}</h2>
+            <ShapeBuilder />
+          </div>
+        </div>,
 
-        <div>
-          <h2 className="mb-6 text-2xl font-bold">{tg("matchPairs")}</h2>
-          <MatchPairs />
-        </div>
+        /* Section 5: Detective game */
+        <div key="s5" className="flex items-start justify-center">
+          <div className="w-full max-w-3xl">
+            <h2 className="mb-6 text-2xl font-bold">{tg("detective")}</h2>
+            <Detective />
+          </div>
+        </div>,
 
-        <div>
-          <h2 className="mb-6 text-2xl font-bold">{tg("matchPairsUnits")}</h2>
-          <MatchPairsUnits />
-        </div>
-      </div>
-    </div>
+        /* Section 6: Match Pairs — shapes to areas */
+        <div key="s6" className="flex items-start justify-center">
+          <div className="w-full max-w-3xl">
+            <MatchPairsGame
+              gameId="match-pairs"
+              lessonId="primary-areas"
+              title={tg("matchPairs")}
+              description={tg("matchPairsDesc")}
+              generatePairs={() => generateShapeAreaPairs(aS)}
+              gridCols={4}
+            />
+          </div>
+        </div>,
+
+        /* Section 7: Match Pairs — unit conversions */
+        <div key="s7" className="flex items-start justify-center">
+          <div className="w-full max-w-3xl">
+            <MatchPairsGame
+              gameId="match-pairs-units"
+              lessonId="primary-areas"
+              title={tg("matchPairsUnits")}
+              description={tg("matchPairsUnitsDesc")}
+              generatePairs={generateUnitConversionPairs}
+              gridCols={4}
+            />
+          </div>
+        </div>,
+      ]}
+    </LessonShell>
   );
 }

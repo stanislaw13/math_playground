@@ -83,7 +83,7 @@ function ShapeCard({
   );
 }
 
-function SquareExplorer() {
+export function SquareExplorer() {
   const t = useTranslations("areas");
   const [side, setSide] = useState(3);
   const area = side * side;
@@ -128,7 +128,7 @@ function SquareExplorer() {
   );
 }
 
-function RectangleExplorer() {
+export function RectangleExplorer() {
   const t = useTranslations("areas");
   const [width, setWidth] = useState(4);
   const [height, setHeight] = useState(2.5);
@@ -185,7 +185,7 @@ function RectangleExplorer() {
   );
 }
 
-function TriangleExplorer() {
+export function TriangleExplorer() {
   const t = useTranslations("areas");
   const [base, setBase] = useState(4);
   const [height, setHeight] = useState(3);
@@ -261,7 +261,7 @@ function TriangleExplorer() {
   );
 }
 
-function DiamondExplorer() {
+export function DiamondExplorer() {
   const t = useTranslations("areas");
   const [d1, setD1] = useState(4);
   const [d2, setD2] = useState(3);
@@ -335,7 +335,7 @@ function DiamondExplorer() {
   );
 }
 
-function TrapezoidExplorer() {
+export function TrapezoidExplorer() {
   const t = useTranslations("areas");
   const [a, setA] = useState(4);
   const [b, setB] = useState(2.5);

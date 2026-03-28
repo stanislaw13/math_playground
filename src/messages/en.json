@@ -116,7 +116,9 @@
     "moves": "Moves",
     "startGame": "Start Game",
     "matchPairsUnits": "Unit Conversion Match",
-    "matchPairsUnitsDesc": "Match equivalent areas in different units — watch out, the numbers look similar!"
+    "matchPairsUnitsDesc": "Match equivalent areas in different units — watch out, the numbers look similar!",
+    "tryAgain": "Try again",
+    "complete": "Complete!"
   },
   "auth": {
     "loginTitle": "Log in to Math Playground",

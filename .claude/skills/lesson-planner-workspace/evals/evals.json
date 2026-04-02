@@ -1,0 +1,23 @@
+{
+  "skill_name": "lesson-planner",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Let's plan a new lesson for math_playground about decimal fractions for primary school. Students should learn place value, comparing decimals, and basic addition/subtraction of decimals. I want the theory to have some kind of number line explorer where kids can see where decimals sit between whole numbers.",
+      "expected_output": "A complete lesson plan followed by generated code files: page.tsx, explorer components, 2-6 adaptive game components, translations, and lesson registry entry",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "I need a highschool lesson about solving linear equations. Just the basics — one variable, both sides.",
+      "expected_output": "Claude should ask clarifying questions first (since the request is minimal), then produce a lesson plan and code for highschool-level linear equations",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Create a primary school lesson about fractions. I want one game that uses pizza or pie slices as a visual metaphor, and I want to reuse the MatchPairs game for matching fractions to their decimal equivalents. The theory section should have an interactive fraction bar where students can slide to see equivalent fractions.",
+      "expected_output": "Lesson with a custom pizza/pie visual game, a MatchPairs integration with fraction-to-decimal pairs, and an interactive fraction bar explorer in the theory section",
+      "files": []
+    }
+  ]
+}

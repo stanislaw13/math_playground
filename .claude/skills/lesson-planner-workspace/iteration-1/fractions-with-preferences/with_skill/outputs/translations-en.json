@@ -1,0 +1,45 @@
+{
+  "primary": {
+    "fractions": {
+      "title": "Introduction to Fractions",
+      "description": "Learn about fractions using pizzas, pies, and interactive visualizations"
+    }
+  },
+  "fractions": {
+    "title": "Introduction to Fractions",
+    "intro": "Fractions represent parts of a whole. Let's explore how fractions work!",
+    "barExplorer": "Fraction Bar Explorer",
+    "barExplorerDesc": "Slide the bar to see how fractions change. Watch how the decimal equivalent updates!",
+    "wholeUnit": "Whole",
+    "selectFraction": "Select a fraction:",
+    "equivalent": "Equivalent to",
+    "numeratorLabel": "Numerator",
+    "denominatorLabel": "Denominator",
+    "partsLabel": "Parts selected",
+    "ofLabel": "of",
+    "fractionFormula": "Fraction = numerator ÷ denominator",
+    "pizzaGame": "Pizza Slices Game",
+    "pizzaGameDesc": "Select the correct number of pizza slices to match the target fraction",
+    "selectSlices": "Select {count} slice(s) out of {total}",
+    "target": "Target",
+    "selected": "Selected",
+    "slicesCorrect": "That's correct! You selected the right amount",
+    "slicesIncorrect": "Not quite right. Try again!",
+    "fractionMatchPairs": "Match Fractions to Decimals",
+    "fractionMatchPairsDesc": "Match each fraction with its decimal equivalent",
+    "fractionComparison": "Fraction Size Challenge",
+    "fractionComparisonDesc": "Choose which fraction is larger",
+    "whichIsLarger": "Which fraction is larger?",
+    "orderFromSmallest": "Order from smallest to largest",
+    "correct": "Correct!",
+    "incorrect": "Try again",
+    "next": "Next",
+    "check": "Check",
+    "questionOf": "Question {current} of {total}",
+    "yourAnswer": "Your answer",
+    "hint1": "Look at the numerator and denominator",
+    "hint2": "Remember: a larger denominator means smaller pieces",
+    "hint3": "Convert to decimals to compare",
+    "keepPracticing": "Practice more on:"
+  }
+}

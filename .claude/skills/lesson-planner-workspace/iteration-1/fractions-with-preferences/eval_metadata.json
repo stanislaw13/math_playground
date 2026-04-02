@@ -1,0 +1,6 @@
+{
+  "eval_id": 3,
+  "eval_name": "fractions-with-preferences",
+  "prompt": "Create a primary school lesson about fractions. I want one game that uses pizza or pie slices as a visual metaphor, and I want to reuse the MatchPairs game for matching fractions to their decimal equivalents. The theory section should have an interactive fraction bar where students can slide to see equivalent fractions.",
+  "assertions": []
+}

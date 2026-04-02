@@ -18,6 +18,20 @@ export const lessons: LessonMeta[] = [
     order: 1,
     games: ["areas-quiz", "shape-builder", "detective", "match-pairs"],
   },
+  {
+    id: "primary-decimals",
+    titleKey: "primary.decimals.title",
+    descriptionKey: "primary.decimals.description",
+    path: "/primary/decimals",
+    category: "primary",
+    order: 2,
+    games: [
+      "number-line-placement",
+      "comparison-challenge",
+      "decimal-calculator",
+      "fraction-decimal-match",
+    ],
+  },
 ];
 
 export function getLessonsByCategory(category: "primary" | "highschool") {

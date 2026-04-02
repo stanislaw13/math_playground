@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { useAuth } from "@/lib/auth/context";
 import { saveGameScore } from "@/lib/progress";
+import Confetti from "@/components/ui/Confetti";
 import type { GameContext } from "./types";
 
 // ---------------------------------------------------------------------------
@@ -39,9 +40,10 @@ export default function GameWrapper({
   const [gameKey, setGameKey] = useState(0);
 
   const addScore = useCallback((points: number) => {
-    scoreRef.current += points;
-    setScore(scoreRef.current);
-  }, []);
+    const next = Math.min(scoreRef.current + points, maxScore);
+    scoreRef.current = next;
+    setScore(next);
+  }, [maxScore]);
 
   const finish = useCallback(() => {
     setFinished(true);
@@ -77,27 +79,33 @@ export default function GameWrapper({
 
   // --- Finish screen ---
   if (finished) {
+    const isPerfect = score >= maxScore;
     const accuracy = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
     return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-8 text-center"
-      >
-        <h2 className="mb-4 text-2xl font-bold">{tg("allMatched")}</h2>
-        <p className="mb-2 text-3xl font-bold text-[var(--color-accent)]">
-          {score} / {maxScore}
-        </p>
-        <p className="mb-6 text-[var(--color-text-secondary)]">
-          {accuracy}%
-        </p>
-        <button
-          onClick={restart}
-          className="rounded-lg bg-[var(--color-accent)] px-6 py-3 font-medium text-white transition-colors hover:bg-[var(--color-accent-hover)]"
+      <>
+        {isPerfect && <Confetti />}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-8 text-center"
         >
-          {tg("tryAgain")}
-        </button>
-      </motion.div>
+          <h2 className="mb-4 text-2xl font-bold">
+            {isPerfect ? "🏆 " : ""}{tg("allMatched")}
+          </h2>
+          <p className="mb-2 text-3xl font-bold text-[var(--color-accent)]">
+            {score} / {maxScore}
+          </p>
+          <p className="mb-6 text-[var(--color-text-secondary)]">
+            {accuracy}%
+          </p>
+          <button
+            onClick={restart}
+            className="rounded-lg bg-[var(--color-accent)] px-6 py-3 font-medium text-white transition-colors hover:bg-[var(--color-accent-hover)]"
+          >
+            {tg("tryAgain")}
+          </button>
+        </motion.div>
+      </>
     );
   }
 

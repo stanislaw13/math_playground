@@ -135,7 +135,7 @@ export default function LessonShell({ config, children }: LessonShellProps) {
     : <RenderSection config={config.sections[current]} />;
 
   return (
-    <div className="relative flex h-[calc(100vh-3.5rem)] flex-col overflow-hidden">
+    <div className="relative flex h-[calc(100dvh-7.5rem)] flex-col overflow-hidden">
       {/* Formula sidebar */}
       {config.formulas && <FormulaSidebar formulas={config.formulas} />}
 

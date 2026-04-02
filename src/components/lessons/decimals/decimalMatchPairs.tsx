@@ -38,7 +38,7 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 export function generateFractionDecimalPairs(): MatchPairItem[] {
-  const selected = shuffle(ALL_PAIRS).slice(0, 6);
+  const selected = shuffle(ALL_PAIRS).slice(0, 8);
   return selected.map((p) => ({
     left: <K latex={p.frac} />,
     right: <span className="font-mono text-lg">{p.decimal}</span>,

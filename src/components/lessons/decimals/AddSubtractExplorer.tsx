@@ -3,46 +3,145 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
-import katex from "katex";
-
-function Latex({ latex }: { latex: string }) {
-  const html = katex.renderToString(latex, { throwOnError: false, displayMode: true });
-  return <div dangerouslySetInnerHTML={{ __html: html }} />;
-}
 
 type Op = "add" | "subtract";
 
-/**
- * Breaks an addition or subtraction of two decimals into column-by-column steps.
- * Returns an array of step descriptions with LaTeX.
- */
-function computeSteps(a: number, b: number, op: Op) {
-  const aStr = a.toFixed(2);
-  const bStr = b.toFixed(2);
-  const result = op === "add" ? a + b : a - b;
-  const resultStr = result.toFixed(2);
-  const symbol = op === "add" ? "+" : "-";
+// ---------------------------------------------------------------------------
+// Column addition display helpers
+// ---------------------------------------------------------------------------
 
-  const steps = [
-    {
-      label: "alignPoints",
-      latex: `\\begin{array}{r} ${aStr} \\\\ ${symbol}\\; ${bStr} \\\\ \\hline \\end{array}`,
-    },
-    {
-      label: "hundredthsCol",
-      latex: `\\text{Hundredths: } ${aStr[4]} ${symbol} ${bStr[4]} = ${resultStr[resultStr.length - 1]}`,
-    },
-    {
-      label: "tenthsCol",
-      latex: `\\text{Tenths: } ${aStr[2]} ${symbol} ${bStr[2]}`,
-    },
-    {
-      label: "result",
-      latex: `${aStr} ${symbol} ${bStr} = ${resultStr}`,
-    },
-  ];
-  return steps;
+/**
+ * Pad a toFixed(2) string to exactly 5 chars: " X.XX" or "XX.XX"
+ * Positions: [0]=tens, [1]=ones, [2]='.', [3]=tenths, [4]=hundredths
+ */
+function pad5(s: string): string {
+  return s.padStart(5);
 }
+
+/**
+ * For the result row, each character position has a minimum step to reveal it:
+ *  pos 4 (hundredths) → step >= 1
+ *  pos 3 (tenths)     → step >= 2
+ *  pos 1 (ones)       → step >= 3
+ *  pos 0 (tens)       → step >= 3
+ *  pos 2 ('.')        → always visible
+ *  pos 0 if ' '       → always visible as blank
+ */
+function revealedAt(pos: number): number {
+  if (pos === 4) return 1;
+  if (pos === 3) return 2;
+  return 3; // pos 0 and 1 (ones/tens)
+}
+
+// ---------------------------------------------------------------------------
+// Result row: builds up digit by digit, right to left
+// ---------------------------------------------------------------------------
+
+function ResultRow({
+  resultStr,
+  revealedStep,
+}: {
+  resultStr: string;
+  revealedStep: number;
+}) {
+  const padded = pad5(resultStr);
+
+  return (
+    <span className="inline-flex items-baseline font-mono text-2xl tracking-widest">
+      {padded.split("").map((char, i) => {
+        if (char === " ") {
+          return (
+            <span key={i} className="inline-block w-[1ch]">&nbsp;</span>
+          );
+        }
+        if (char === ".") {
+          return (
+            <span key={i} className="inline-block w-[0.6ch] text-center">
+              .
+            </span>
+          );
+        }
+
+        const minStep = revealedAt(i);
+        const show = revealedStep >= minStep;
+
+        return (
+          <span key={i} className="inline-block w-[1ch] text-center">
+            {show ? (
+              <motion.span
+                key={`${char}-${revealedStep}`}
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25 }}
+                className="font-bold text-[var(--color-accent)]"
+              >
+                {char}
+              </motion.span>
+            ) : (
+              <span className="text-[var(--color-text-secondary)] opacity-30">
+                ?
+              </span>
+            )}
+          </span>
+        );
+      })}
+    </span>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Column addition block
+// ---------------------------------------------------------------------------
+
+function ColumnAddition({
+  aStr,
+  bStr,
+  resultStr,
+  symbol,
+  revealedStep,
+}: {
+  aStr: string;
+  bStr: string;
+  resultStr: string;
+  symbol: string;
+  revealedStep: number;
+}) {
+  const width = Math.max(aStr.length, bStr.length, resultStr.length);
+  const aPad = aStr.padStart(width);
+  const bPad = bStr.padStart(width);
+
+  return (
+    <div className="my-4 flex justify-center">
+      <div className="rounded-lg bg-[var(--color-bg-tertiary)] p-5">
+        <div className="flex flex-col items-end gap-1 font-mono text-2xl tracking-widest">
+          {/* Row 1: first number */}
+          <span>{aPad}</span>
+          {/* Row 2: operator + second number */}
+          <span>
+            <span className="mr-1 text-[var(--color-text-secondary)]">
+              {symbol}
+            </span>
+            {bPad}
+          </span>
+          {/* Divider */}
+          <div className="my-1 w-full border-t-2 border-[var(--color-text-secondary)]" />
+          {/* Row 3: result (reveals progressively) */}
+          <ResultRow resultStr={resultStr} revealedStep={revealedStep} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Step labels (translated, no LaTeX text)
+// ---------------------------------------------------------------------------
+
+const STEP_KEYS = ["alignPoints", "hundredthsCol", "tenthsCol", "result"] as const;
+
+// ---------------------------------------------------------------------------
+// Main component
+// ---------------------------------------------------------------------------
 
 export default function AddSubtractExplorer() {
   const t = useTranslations("decimals");
@@ -51,8 +150,17 @@ export default function AddSubtractExplorer() {
   const [op, setOp] = useState<Op>("add");
   const [revealedStep, setRevealedStep] = useState(0);
 
-  const result = op === "add" ? a + b : a - b;
-  const steps = computeSteps(a, b, op);
+  const effectiveB = Math.min(b, op === "subtract" ? a : 19.99);
+  const result = op === "add" ? a + effectiveB : a - effectiveB;
+
+  const aStr = a.toFixed(2);
+  const bStr = effectiveB.toFixed(2);
+  const resultStr = result.toFixed(2);
+  const symbol = op === "add" ? "+" : "−";
+
+  const totalSteps = STEP_KEYS.length; // 4 steps (0–3)
+
+  const reset = () => setRevealedStep(0);
 
   return (
     <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6">
@@ -63,23 +171,40 @@ export default function AddSubtractExplorer() {
         <div>
           <div className="mb-1 flex justify-between text-sm">
             <span className="font-medium">{t("firstNumber")}</span>
-            <span className="font-mono text-[var(--color-accent)]">{a.toFixed(2)}</span>
+            <span className="font-mono text-[var(--color-accent)]">
+              {a.toFixed(2)}
+            </span>
           </div>
           <input
-            type="range" min={0.01} max={19.99} step={0.01} value={a}
-            onChange={(e) => { setA(parseFloat(e.target.value)); setRevealedStep(0); }}
+            type="range"
+            min={0.01}
+            max={19.99}
+            step={0.01}
+            value={a}
+            onChange={(e) => {
+              setA(parseFloat(e.target.value));
+              reset();
+            }}
             className="w-full"
           />
         </div>
         <div>
           <div className="mb-1 flex justify-between text-sm">
             <span className="font-medium">{t("secondNumber")}</span>
-            <span className="font-mono text-[var(--color-accent)]">{b.toFixed(2)}</span>
+            <span className="font-mono text-[var(--color-accent)]">
+              {effectiveB.toFixed(2)}
+            </span>
           </div>
           <input
-            type="range" min={0.01} max={19.99} step={0.01}
-            value={Math.min(b, op === "subtract" ? a : 19.99)}
-            onChange={(e) => { setB(parseFloat(e.target.value)); setRevealedStep(0); }}
+            type="range"
+            min={0.01}
+            max={19.99}
+            step={0.01}
+            value={effectiveB}
+            onChange={(e) => {
+              setB(parseFloat(e.target.value));
+              reset();
+            }}
             className="w-full"
           />
         </div>
@@ -87,7 +212,10 @@ export default function AddSubtractExplorer() {
         {/* Operation toggle */}
         <div className="flex gap-2">
           <button
-            onClick={() => { setOp("add"); setRevealedStep(0); }}
+            onClick={() => {
+              setOp("add");
+              reset();
+            }}
             className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
               op === "add"
                 ? "bg-[var(--color-accent)] text-white"
@@ -97,7 +225,10 @@ export default function AddSubtractExplorer() {
             + {t("addition")}
           </button>
           <button
-            onClick={() => { setOp("subtract"); setRevealedStep(0); }}
+            onClick={() => {
+              setOp("subtract");
+              reset();
+            }}
             className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
               op === "subtract"
                 ? "bg-[var(--color-accent)] text-white"
@@ -109,36 +240,43 @@ export default function AddSubtractExplorer() {
         </div>
       </div>
 
-      {/* Step-by-step reveal */}
-      <div className="space-y-3">
-        {steps.slice(0, revealedStep + 1).map((step, i) => (
-          <motion.div
-            key={`${a}-${b}-${op}-${i}`}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="rounded-lg bg-[var(--color-bg-tertiary)] p-4"
-          >
-            <p className="mb-1 text-xs font-medium text-[var(--color-text-secondary)]">
-              {t(step.label)}
-            </p>
-            <Latex latex={step.latex} />
-          </motion.div>
-        ))}
-      </div>
+      {/* Step label */}
+      <motion.div
+        key={revealedStep}
+        initial={{ opacity: 0, y: 4 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-1 text-center text-xs font-semibold uppercase tracking-wide text-[var(--color-text-secondary)]"
+      >
+        {t(STEP_KEYS[revealedStep])}
+      </motion.div>
 
-      {revealedStep < steps.length - 1 ? (
+      {/* Column addition visual */}
+      <ColumnAddition
+        aStr={aStr}
+        bStr={bStr}
+        resultStr={resultStr}
+        symbol={symbol}
+        revealedStep={revealedStep}
+      />
+
+      {/* Next step button or final result callout */}
+      {revealedStep < totalSteps - 1 ? (
         <button
           onClick={() => setRevealedStep((s) => s + 1)}
-          className="mt-4 w-full rounded-lg bg-[var(--color-accent)] py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--color-accent-hover)]"
+          className="mt-2 w-full rounded-lg bg-[var(--color-accent)] py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--color-accent-hover)]"
         >
-          {t("showNextStep")} ({revealedStep + 1}/{steps.length})
+          {t("showNextStep")} ({revealedStep + 1}/{totalSteps - 1})
         </button>
       ) : (
-        <div className="mt-4 rounded-lg bg-[var(--color-accent)]/10 p-3 text-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.97 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="mt-2 rounded-lg bg-[var(--color-accent)]/10 p-3 text-center"
+        >
           <p className="text-lg font-bold text-[var(--color-accent)]">
-            {a.toFixed(2)} {op === "add" ? "+" : "−"} {b.toFixed(2)} = {result.toFixed(2)}
+            {aStr} {symbol} {bStr} = {resultStr}
           </p>
-        </div>
+        </motion.div>
       )}
     </div>
   );

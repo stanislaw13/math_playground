@@ -9,6 +9,7 @@ import { saveGameScore } from "@/lib/progress";
 import useAdaptiveEngine from "@/hooks/useAdaptiveEngine";
 import { adaptiveDecimal, type Difficulty, type SkillCategory } from "@/lib/adaptiveEngine";
 import HintSystem, { type HintStep } from "@/components/lessons/HintSystem";
+import Confetti from "@/components/ui/Confetti";
 
 const CATEGORIES: SkillCategory[] = [
   { id: "add-simple", label: "Addition (simple)" },
@@ -151,7 +152,7 @@ export default function DecimalCalculator() {
     if (isNaN(parsed)) return;
     if (Math.abs(parsed - currentQ.answer) < 0.005) {
       const points = getPointsForAttempt(wrongAttempts + 1, getMaxPerQuestion(TOTAL_QUESTIONS));
-      setScore((s) => s + points);
+      setScore((s) => Math.min(s + points, 1000));
       setFeedback("correct");
       engine.record(currentQ.category, true);
     } else {
@@ -188,24 +189,28 @@ export default function DecimalCalculator() {
 
   if (finished) {
     const summary = engine.getSummary();
+    const isPerfect = score >= 1000;
     return (
-      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-        className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-8 text-center">
-        <h2 className="mb-4 text-2xl font-bold">{tg("complete")}</h2>
-        <p className="mb-2 text-3xl font-bold text-[var(--color-accent)]">{score} / 1000</p>
-        <p className="mb-4 text-[var(--color-text-secondary)]">{Math.round(summary.overallAccuracy * 100)}%</p>
-        {summary.weakToStrong.length > 0 && summary.weakToStrong[0].accuracy < 0.7 && (
-          <div className="mb-4 rounded-lg bg-[var(--color-bg-tertiary)] p-4 text-left">
-            <p className="mb-2 text-sm font-medium text-[var(--color-text-secondary)]">{t("keepPracticing")}:</p>
-            {summary.weakToStrong.filter((s) => s.accuracy < 0.7).map((s) => (
-              <p key={s.id} className="text-sm">{s.label} — {Math.round(s.accuracy * 100)}%</p>
-            ))}
-          </div>
-        )}
-        <button onClick={startGame} className="rounded-lg bg-[var(--color-accent)] px-6 py-3 font-medium text-white transition-colors hover:bg-[var(--color-accent-hover)]">
-          {tg("tryAgain")}
-        </button>
-      </motion.div>
+      <>
+        {isPerfect && <Confetti />}
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+          className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-8 text-center">
+          <h2 className="mb-4 text-2xl font-bold">{isPerfect ? "🏆 " : ""}{tg("complete")}</h2>
+          <p className="mb-2 text-3xl font-bold text-[var(--color-accent)]">{score} / 1000</p>
+          <p className="mb-4 text-[var(--color-text-secondary)]">{Math.round(summary.overallAccuracy * 100)}%</p>
+          {summary.weakToStrong.length > 0 && summary.weakToStrong[0].accuracy < 0.7 && (
+            <div className="mb-4 rounded-lg bg-[var(--color-bg-tertiary)] p-4 text-left">
+              <p className="mb-2 text-sm font-medium text-[var(--color-text-secondary)]">{t("keepPracticing")}:</p>
+              {summary.weakToStrong.filter((s) => s.accuracy < 0.7).map((s) => (
+                <p key={s.id} className="text-sm">{s.label} — {Math.round(s.accuracy * 100)}%</p>
+              ))}
+            </div>
+          )}
+          <button onClick={startGame} className="rounded-lg bg-[var(--color-accent)] px-6 py-3 font-medium text-white transition-colors hover:bg-[var(--color-accent-hover)]">
+            {tg("tryAgain")}
+          </button>
+        </motion.div>
+      </>
     );
   }
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, use } from "react";
 import { useTranslations } from "next-intl";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { useAuth } from "@/lib/auth/context";
 import {
   fetchLesson,
@@ -132,7 +132,7 @@ export default function EditLessonPage({
             </span>
           )}
           <Link
-            href={`../../play/${lessonId}`}
+            href={`/play/${lessonId}`}
             className="rounded-lg border border-[var(--color-border)] px-4 py-2 text-sm transition-colors hover:bg-[var(--color-bg-tertiary)]"
           >
             {t("preview")}

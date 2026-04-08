@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/lib/auth/context";
 import { createLesson } from "@/lib/customLessons/api";
 import LessonForm from "@/components/creator/LessonForm";
@@ -15,6 +15,7 @@ export default function NewLessonPage() {
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState<"primary" | "highschool">("primary");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   if (authLoading) return null;
 
@@ -29,11 +30,13 @@ export default function NewLessonPage() {
   const handleCreate = async () => {
     if (!title.trim()) return;
     setSaving(true);
+    setError("");
     try {
       const lesson = await createLesson(user.id, title, description, category);
-      router.push(`../creator/${lesson.id}`);
+      router.push(`/creator/${lesson.id}`);
     } catch (err) {
-      console.error(err);
+      console.error("Create lesson error:", err);
+      setError(err instanceof Error ? err.message : "Failed to create lesson");
       setSaving(false);
     }
   };
@@ -52,6 +55,9 @@ export default function NewLessonPage() {
           onCategoryChange={setCategory}
         />
 
+        {error && (
+          <p className="mt-4 text-sm text-[var(--color-error)]">{error}</p>
+        )}
         <div className="mt-6 flex justify-end">
           <button
             onClick={handleCreate}

@@ -2,7 +2,7 @@
 
 import { use } from "react";
 import { useTranslations } from "next-intl";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { useAuth } from "@/lib/auth/context";
 import ShareManager from "@/components/creator/ShareManager";
 
@@ -29,7 +29,7 @@ export default function SharePage({
     <div className="mx-auto max-w-xl">
       <div className="mb-6 flex items-center gap-4">
         <Link
-          href={`../${lessonId}`}
+          href={`/creator/${lessonId}`}
           className="rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-sm transition-colors hover:bg-[var(--color-bg-tertiary)]"
         >
           ← {t("editLesson")}

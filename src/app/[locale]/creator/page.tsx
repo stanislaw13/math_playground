@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { useAuth } from "@/lib/auth/context";
 import { fetchMyLessons, fetchSharedLessons, deleteLesson } from "@/lib/customLessons/api";
 import type { CustomLesson } from "@/lib/customLessons/types";
@@ -52,7 +52,7 @@ export default function CreatorDashboard() {
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-3xl font-bold">{t("title")}</h1>
         <Link
-          href="creator/new"
+          href="/creator/new"
           className="rounded-lg bg-[var(--color-accent)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--color-accent-hover)]"
         >
           + {t("newLesson")}
@@ -104,13 +104,13 @@ export default function CreatorDashboard() {
                 {tab === "mine" ? (
                   <>
                     <Link
-                      href={`creator/${lesson.id}`}
+                      href={`/creator/${lesson.id}`}
                       className="rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-xs transition-colors hover:bg-[var(--color-bg-tertiary)]"
                     >
                       {t("editLesson")}
                     </Link>
                     <Link
-                      href={`creator/${lesson.id}/share`}
+                      href={`/creator/${lesson.id}/share`}
                       className="rounded-lg border border-[var(--color-border)] px-3 py-1.5 text-xs transition-colors hover:bg-[var(--color-bg-tertiary)]"
                     >
                       {t("share")}
@@ -124,7 +124,7 @@ export default function CreatorDashboard() {
                   </>
                 ) : (
                   <Link
-                    href={`play/${lesson.id}`}
+                    href={`/play/${lesson.id}`}
                     className="rounded-lg bg-[var(--color-accent)] px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[var(--color-accent-hover)]"
                   >
                     {t("play")}
@@ -132,7 +132,7 @@ export default function CreatorDashboard() {
                 )}
                 {tab === "mine" && (
                   <Link
-                    href={`play/${lesson.id}`}
+                    href={`/play/${lesson.id}`}
                     className="rounded-lg bg-[var(--color-accent)] px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[var(--color-accent-hover)]"
                   >
                     {t("play")}

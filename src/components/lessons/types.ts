@@ -59,11 +59,22 @@ export interface CustomSectionConfig {
   component: ComponentType;
 }
 
+/** LaTeX content section — explanatory text rendered with KaTeX. */
+export interface LatexSectionConfig {
+  type: "latex";
+  title?: string;
+  /** LaTeX string to render. */
+  content: string;
+  /** Whether to use display mode (block) or inline. Default: true. */
+  displayMode?: boolean;
+}
+
 export type SectionConfig =
   | PlaygroundSectionConfig
   | GameSectionConfig
   | MatchPairsSectionConfig
-  | CustomSectionConfig;
+  | CustomSectionConfig
+  | LatexSectionConfig;
 
 // ---------------------------------------------------------------------------
 // Match-pairs game types

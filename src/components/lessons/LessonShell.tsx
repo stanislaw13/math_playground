@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import FormulaSidebar from "@/components/ui/FormulaSidebar";
+import LatexSection from "./LatexSection";
 import type { LessonConfig, SectionConfig } from "./types";
 
 // ---------------------------------------------------------------------------
@@ -65,6 +66,16 @@ function RenderSection({ config }: { config: SectionConfig }) {
           )}
           <Comp />
         </div>
+      );
+    }
+
+    case "latex": {
+      return (
+        <LatexSection
+          title={config.title}
+          content={config.content}
+          displayMode={config.displayMode}
+        />
       );
     }
   }

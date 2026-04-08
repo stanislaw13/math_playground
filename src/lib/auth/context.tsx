@@ -32,17 +32,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const supabase = createClient()!;
 
-    // Single source of truth: onAuthStateChange handles both initial session
-    // (INITIAL_SESSION event) and all subsequent changes. Avoids the lock
-    // contention that occurred when getUser() and onAuthStateChange both tried
-    // to refresh the token concurrently.
+    // Fallback: if INITIAL_SESSION fires with no user and a token refresh is in
+    // flight, TOKEN_REFRESHED will arrive shortly. If nothing arrives within
+    // 1.5 s the user is genuinely not logged in — release the loading state.
+    let fallbackTimer: ReturnType<typeof setTimeout> | null = null;
+
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (fallbackTimer) {
+        clearTimeout(fallbackTimer);
+        fallbackTimer = null;
+      }
+
       const currentUser = session?.user ?? null;
       setUser(currentUser);
 
       if (currentUser) {
+        // Unblock the UI immediately — profile loads in the background.
+        setLoading(false);
         try {
           const { data } = await supabase
             .from("profiles")
@@ -55,13 +63,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } else {
         setProfile(null);
-      }
 
-      // Mark loading done after the first event (INITIAL_SESSION) fires.
-      setLoading(false);
+        if (event === "INITIAL_SESSION") {
+          // Access token may be expired — Supabase will fire TOKEN_REFRESHED
+          // shortly if a refresh token exists. Defer loading=false to avoid a
+          // premature redirect while the refresh is in flight.
+          fallbackTimer = setTimeout(() => {
+            setLoading(false);
+          }, 1500);
+        } else {
+          // SIGNED_OUT, TOKEN_REFRESHED(null), etc. — definitive: not logged in.
+          setLoading(false);
+        }
+      }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      if (fallbackTimer) clearTimeout(fallbackTimer);
+    };
   }, []);
 
   const signOut = async () => {

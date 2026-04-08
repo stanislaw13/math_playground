@@ -45,6 +45,18 @@ export default function Navbar() {
             >
               {t("nav.highschool")}
             </Link>
+            {user && (
+              <Link
+                href="/creator"
+                className={`text-sm transition-colors hover:text-[var(--accent)] ${
+                  pathname.startsWith("/creator")
+                    ? "text-[var(--accent)]"
+                    : "text-[var(--text-secondary)]"
+                }`}
+              >
+                {t("creator.title")}
+              </Link>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-3">

@@ -31,3 +31,5 @@ export interface TeacherLink {
   status: "pending" | "accepted" | "declined";
   created_at: string;
 }
+
+export type { CustomLesson, CustomSection, LessonShare } from "@/lib/customLessons/types";

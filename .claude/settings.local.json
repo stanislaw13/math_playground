@@ -8,7 +8,10 @@
       "Bash(/Users/stasz/.nvm/versions/node/v22.15.0/bin/npx tsc:*)",
       "Bash(export PATH=\"/Users/stasz/.nvm/versions/node/v22.15.0/bin:$PATH\")",
       "Bash(curl -s http://localhost:3333/en/primary/areas)",
-      "Bash(find /Users/stasz/Documents/Programowanie/math_playground -name *.sql -o -name supabase.json -o -name auth* -type f)"
+      "Bash(find /Users/stasz/Documents/Programowanie/math_playground -name *.sql -o -name supabase.json -o -name auth* -type f)",
+      "Bash(mkdir -p /Users/stasz/Documents/Programowanie/math_playground/src/app/\\\\[locale\\\\]/creator/\\\\[lessonId\\\\]/share)",
+      "Bash(mkdir -p /Users/stasz/Documents/Programowanie/math_playground/src/app/\\\\[locale\\\\]/creator/new)",
+      "Bash(mkdir -p /Users/stasz/Documents/Programowanie/math_playground/src/app/\\\\[locale\\\\]/play/\\\\[lessonId\\\\])"
     ]
   },
   "disableAllHooks": true

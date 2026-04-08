@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/lib/auth/context";
 import { createClient } from "@/lib/supabase/client";
 import { lessons } from "@/content/lessons";
+import { resolveLocaleString } from "@/components/lessons/types";
 import type {
   LessonProgress,
   GameAttempt,
@@ -18,10 +19,16 @@ const gameNames: Record<string, string> = {
   "shape-builder": "Shape Builder",
   "detective": "Detective",
   "match-pairs": "Match Pairs",
+  "number-line-placement": "Number Line",
+  "comparison-challenge": "Comparison",
+  "decimal-calculator": "Calculator",
+  "fraction-decimal-match": "Match Pairs",
+  "fractions-match": "Match Pairs",
 };
 
 export default function ProfilePage() {
   const t = useTranslations();
+  const locale = useLocale();
   const { user, profile, loading } = useAuth();
   const router = useRouter();
   const supabase = createClient()!;
@@ -164,7 +171,11 @@ export default function ProfilePage() {
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="font-medium">{t(lesson.titleKey)}</h3>
+                    <h3 className="font-medium">
+                      {lesson.def
+                        ? resolveLocaleString(lesson.def.title, locale)
+                        : t(lesson.titleKey)}
+                    </h3>
                     <p className="text-sm text-[var(--color-text-secondary)]">
                       {progressPercent > 0 ? (
                         <span className={progressPercent >= 80 ? "text-[var(--color-success)]" : "text-[var(--color-accent)]"}>

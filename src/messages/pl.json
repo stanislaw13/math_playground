@@ -122,7 +122,12 @@
     "matchPairsUnits": "Dopasuj Jednostki Pola",
     "matchPairsUnitsDesc": "Dopasuj równoważne pola w różnych jednostkach — uważaj, liczby wyglądają podobnie!",
     "tryAgain": "Spróbuj ponownie",
-    "complete": "Ukończono!"
+    "complete": "Ukończono!",
+    "correct": "Poprawnie!",
+    "incorrect": "To nie jest właściwa odpowiedź, spróbuj ponownie.",
+    "next": "Dalej",
+    "keepPracticing": "Ćwicz więcej",
+    "questionOf": "Pytanie {current} z {total}"
   },
   "auth": {
     "loginTitle": "Zaloguj się do Placu Zabaw",

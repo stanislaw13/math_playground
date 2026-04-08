@@ -32,39 +32,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const supabase = createClient()!;
 
-    const getUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      setUser(user);
-
-      if (user) {
-        const { data } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", user.id)
-          .single();
-        setProfile(data);
-      }
-      setLoading(false);
-    };
-
-    getUser();
-
+    // Single source of truth: onAuthStateChange handles both initial session
+    // (INITIAL_SESSION event) and all subsequent changes. Avoids the lock
+    // contention that occurred when getUser() and onAuthStateChange both tried
+    // to refresh the token concurrently.
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        const { data } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", session.user.id)
-          .single();
-        setProfile(data);
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+
+      if (currentUser) {
+        try {
+          const { data } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", currentUser.id)
+            .single();
+          setProfile(data ?? null);
+        } catch {
+          setProfile(null);
+        }
       } else {
         setProfile(null);
       }
+
+      // Mark loading done after the first event (INITIAL_SESSION) fires.
+      setLoading(false);
     });
 
     return () => subscription.unsubscribe();

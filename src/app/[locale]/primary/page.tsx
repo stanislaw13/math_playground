@@ -1,9 +1,13 @@
-import { useTranslations } from "next-intl";
+"use client";
+
+import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { getLessonsByCategory } from "@/content/lessons";
+import { resolveLocaleString } from "@/components/lessons/types";
 
 export default function PrimaryPage() {
   const t = useTranslations();
+  const locale = useLocale();
   const lessons = getLessonsByCategory("primary");
 
   return (
@@ -17,10 +21,14 @@ export default function PrimaryPage() {
             className="group rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] p-6 transition-all hover:border-[var(--color-accent)]"
           >
             <h3 className="mb-2 font-semibold group-hover:text-[var(--color-accent)]">
-              {t(lesson.titleKey)}
+              {lesson.def
+                ? resolveLocaleString(lesson.def.title, locale)
+                : t(lesson.titleKey)}
             </h3>
             <p className="text-sm text-[var(--color-text-secondary)]">
-              {t(lesson.descriptionKey)}
+              {lesson.def
+                ? resolveLocaleString(lesson.def.description, locale)
+                : t(lesson.descriptionKey)}
             </p>
           </Link>
         ))}

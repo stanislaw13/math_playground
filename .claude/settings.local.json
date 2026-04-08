@@ -1,11 +1,15 @@
 {
-  "disableAllHooks": true,
   "permissions": {
     "allow": [
       "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --use-npm --no-turbopack)",
       "Bash(npx next:*)",
       "mcp__Claude_Preview__preview_start",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(/Users/stasz/.nvm/versions/node/v22.15.0/bin/npx tsc:*)",
+      "Bash(export PATH=\"/Users/stasz/.nvm/versions/node/v22.15.0/bin:$PATH\")",
+      "Bash(curl -s http://localhost:3333/en/primary/areas)",
+      "Bash(find /Users/stasz/Documents/Programowanie/math_playground -name *.sql -o -name supabase.json -o -name auth* -type f)"
     ]
-  }
+  },
+  "disableAllHooks": true
 }

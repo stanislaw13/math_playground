@@ -1,3 +1,6 @@
+import type { LessonDef } from "@/components/lessons/types";
+import fractionsLesson from "@/lessons/fractions.lesson";
+
 export interface LessonMeta {
   id: string;
   titleKey: string;
@@ -6,6 +9,25 @@ export interface LessonMeta {
   category: "primary" | "highschool";
   order: number;
   games: string[];
+  /** Present for lessons created with the minimal-code single-file system. */
+  def?: LessonDef;
+}
+
+/**
+ * Register a single-file lesson. Produces a LessonMeta entry that works
+ * with the existing listing page and catch-all route.
+ */
+export function registerLesson(def: LessonDef): LessonMeta {
+  return {
+    id: def.id,
+    titleKey: "__inline__",
+    descriptionKey: "__inline__",
+    path: `/${def.category}/${def.slug}`,
+    category: def.category,
+    order: def.order,
+    games: def.games,
+    def,
+  };
 }
 
 export const lessons: LessonMeta[] = [
@@ -32,6 +54,7 @@ export const lessons: LessonMeta[] = [
       "fraction-decimal-match",
     ],
   },
+  registerLesson(fractionsLesson),
 ];
 
 export function getLessonsByCategory(category: "primary" | "highschool") {

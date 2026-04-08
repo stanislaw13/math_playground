@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "math-playground",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["next", "dev", "--port", "3333"],
+      "runtimeExecutable": "/bin/sh",
+      "runtimeArgs": ["-c", "PATH=/Users/stasz/.nvm/versions/node/v22.15.0/bin:$PATH npm run dev -- --webpack --port 3333"],
       "port": 3333
     }
   ]

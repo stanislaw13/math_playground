@@ -122,7 +122,12 @@
     "matchPairsUnits": "Unit Conversion Match",
     "matchPairsUnitsDesc": "Match equivalent areas in different units — watch out, the numbers look similar!",
     "tryAgain": "Try again",
-    "complete": "Complete!"
+    "complete": "Complete!",
+    "correct": "Correct!",
+    "incorrect": "That's not right, try again.",
+    "next": "Next",
+    "keepPracticing": "Keep practising",
+    "questionOf": "Question {current} of {total}"
   },
   "auth": {
     "loginTitle": "Log in to Math Playground",

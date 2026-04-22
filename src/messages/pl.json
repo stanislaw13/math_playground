@@ -186,7 +186,17 @@
     "calculatorDesc": "Rozwiąż zadania z dodawaniem i odejmowaniem ułamków dziesiętnych",
     "yourAnswer": "Twoja odpowiedź",
     "matchTitle": "Dopasuj ułamek ↔ dziesiętny",
-    "matchDesc": "Dopasuj każdy ułamek do jego odpowiednika dziesiętnego"
+    "matchDesc": "Dopasuj każdy ułamek do jego odpowiednika dziesiętnego",
+    "notationTitle": "Odczytaj i zapisz liczbę",
+    "notationDesc": "Dopasuj słowny zapis liczby do jej postaci cyfrowej",
+    "multiplyTitle": "Mnożenie ułamków dziesiętnych",
+    "multiplyDesc": "Dopasuj działanie do wyniku",
+    "divideTitle": "Dzielenie ułamków dziesiętnych",
+    "divideDesc": "Dopasuj działanie do wyniku",
+    "roundingTitle": "Zaokrąglanie ułamków dziesiętnych",
+    "roundingDesc": "Zaokrąglij do wskazanego miejsca po przecinku",
+    "unitsTitle": "Wyrażenia dwumianowane",
+    "unitsDesc": "Zamień wyrażenie dwumianowane na ułamek dziesiętny i odwrotnie"
   },
   "creator": {
     "title": "Kreator Lekcji",

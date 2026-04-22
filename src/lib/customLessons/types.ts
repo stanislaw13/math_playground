@@ -14,6 +14,7 @@ export interface ContentElement {
 
 export interface CustomMatchPairsConfig {
   gridCols: number;
+  displayCount?: number;
   pairs: { left: ContentElement; right: ContentElement }[];
 }
 

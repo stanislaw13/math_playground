@@ -186,7 +186,17 @@
     "calculatorDesc": "Solve addition and subtraction problems with decimals",
     "yourAnswer": "Your answer",
     "matchTitle": "Fraction ↔ Decimal Match",
-    "matchDesc": "Match each fraction with its decimal equivalent"
+    "matchDesc": "Match each fraction with its decimal equivalent",
+    "notationTitle": "Read & Write Decimals",
+    "notationDesc": "Match the word form of a number to its digit form",
+    "multiplyTitle": "Multiplying Decimals",
+    "multiplyDesc": "Match the expression to its result",
+    "divideTitle": "Dividing Decimals",
+    "divideDesc": "Match the expression to its result",
+    "roundingTitle": "Rounding Decimals",
+    "roundingDesc": "Round to the specified decimal place",
+    "unitsTitle": "Compound Unit Conversions",
+    "unitsDesc": "Convert between compound units and their decimal equivalents"
   },
   "creator": {
     "title": "Lesson Creator",
